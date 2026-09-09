@@ -1,262 +1,300 @@
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Income ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Income</title>
 <style>
-  :root{
-    --ink:#12242E;
-    --ink-soft:#4A5F68;
-    --paper:#F1F3F2;
-    --card:#FFFFFF;
-    --rule:#CBD4D2;
-    --gain:#1D6F5C;
-    --loss:#9B3B42;
-    --brass:#B08A2E;
-    --radius:6px;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-size:15px;
-    line-height:1.5;
-    font-variant-numeric:tabular-nums;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1080px;margin:0 auto;padding:20px 18px 80px}
-  h1,h2,h3{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-weight:600;margin:0}
-  h1{font-size:24px;letter-spacing:-.01em}
-  h2{font-size:19px;margin-bottom:10px}
-  h3{font-size:15px;margin-bottom:6px}
-  .muted{color:var(--ink-soft)}
-  .small{font-size:13px}
-  .num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-  .gain{color:var(--gain)}
-  .loss{color:var(--loss)}
+:root{
+  --r-lg:24px; --r-md:16px; --r-sm:12px;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+}
+[data-theme="light"]{
+  --bg:#F4F5FA; --card:#FFFFFF; --card-2:#F1F3FB; --field:#F5F6FC;
+  --line:#E4E7F2; --tx:#141833; --tx-2:#6B7192; --tx-3:#9BA1C0;
+  --brand:#5B4BF5; --brand-2:#8B5CF6; --brand-ink:#FFFFFF;
+  --up:#00A870; --down:#F2547D;
+  --sh:0 2px 4px rgba(20,24,51,.04), 0 12px 28px rgba(20,24,51,.07);
+  --sh-hero:0 14px 40px rgba(91,75,245,.32);
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#0B0D1A; --card:#151830; --card-2:#1D2140; --field:#111428;
+  --line:#282D52; --tx:#EEF0FF; --tx-2:#9BA1C8; --tx-3:#6D739B;
+  --brand:#6D5DFF; --brand-2:#A855F7; --brand-ink:#FFFFFF;
+  --up:#2DD69B; --down:#FF6E92;
+  --sh:0 2px 4px rgba(0,0,0,.2), 0 16px 34px rgba(0,0,0,.34);
+  --sh-hero:0 16px 44px rgba(109,93,255,.34);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--f);font-size:16px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:18px 16px 120px}
+h2{font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 14px}
+.mut{color:var(--tx-2)}
+.sm{font-size:13.5px}
+.xs{font-size:12px}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.up{color:var(--up)} .down{color:var(--down)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 
-  header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-  header.top .sub{color:var(--ink-soft);font-size:13px}
-  .pill{margin-left:auto;font-size:12px;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;background:var(--card);cursor:pointer}
-  .pill b{font-weight:600}
-  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--loss);margin-right:6px;vertical-align:1px}
-  .dot.on{background:var(--gain)}
+/* header */
+header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px;letter-spacing:-.02em}
+.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(140deg,var(--brand),var(--brand-2));display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;letter-spacing:-.03em;box-shadow:0 6px 16px rgba(91,75,245,.4)}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+.icb{width:40px;height:40px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--tx-2);display:grid;place-items:center;cursor:pointer;font-size:15px}
+.icb:hover{color:var(--tx);border-color:var(--brand)}
+.icb.live{color:var(--up)} .icb.off{color:var(--down)}
 
-  /* hero ledger strip */
-  .hero{background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end}
-  .hero .big{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-size:40px;line-height:1;color:var(--gain);letter-spacing:-.02em}
-  .hero .lbl{font-size:12px;color:var(--ink-soft);margin-bottom:4px}
-  .hero .col{min-width:100px}
-  .hero .col .v{font-size:17px;font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif}
-  .spark{margin-left:auto;display:flex;align-items:flex-end;gap:5px;height:56px}
-  .spark div{width:16px;background:var(--gain);opacity:.75;border-radius:2px 2px 0 0;min-height:2px}
-  .spark div:last-child{opacity:1}
+/* hero */
+.hero{border-radius:var(--r-lg);padding:24px 26px;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-2) 100%);color:#fff;box-shadow:var(--sh-hero);position:relative;overflow:hidden}
+.hero:after{content:'';position:absolute;right:-70px;top:-90px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.13)}
+.hero:before{content:'';position:absolute;right:30px;bottom:-110px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero .top{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.hero .mlbl{font-size:13px;opacity:.9;font-weight:600}
+.hero .amt{font-size:clamp(38px,9vw,54px);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin:10px 0 4px;position:relative;z-index:1}
+.hero .cur{font-size:.45em;font-weight:700;opacity:.8;margin-right:6px;letter-spacing:0}
+.delta{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:700;position:relative;z-index:1}
+.hstats{display:flex;gap:26px;margin-top:20px;position:relative;z-index:1;flex-wrap:wrap}
+.hstats .k{font-size:12px;opacity:.85;font-weight:600;margin-bottom:3px}
+.hstats .v{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.spark{margin-left:auto;display:flex;align-items:flex-end;gap:7px;height:56px;position:relative;z-index:1}
+.spark i{width:16px;background:rgba(255,255,255,.35);border-radius:5px;min-height:4px;display:block}
+.spark i.now{background:#fff}
 
-  nav{display:flex;gap:2px;margin:18px 0 14px;border-bottom:1px solid var(--rule)}
-  nav button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;font:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;margin-bottom:-1px}
-  nav button.on{color:var(--ink);border-bottom-color:var(--brass);font-weight:600}
-  nav button:focus-visible,.pill:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+/* nav */
+nav{display:flex;gap:6px;margin:22px 0 18px;background:var(--card);padding:6px;border-radius:var(--r-md);border:1px solid var(--line);box-shadow:var(--sh)}
+nav button{flex:1;background:none;border:0;border-radius:11px;padding:11px 8px;font:inherit;font-size:14px;font-weight:600;color:var(--tx-2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+nav button:hover{color:var(--tx)}
+nav button.on{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;box-shadow:0 6px 16px rgba(91,75,245,.32)}
+nav svg{width:17px;height:17px;stroke-width:2.2}
 
-  .panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px}
-  .seg{display:inline-flex;border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
-  .seg button{background:var(--card);border:0;border-right:1px solid var(--rule);padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink-soft)}
-  .seg button:last-child{border-right:0}
-  .seg button.on{background:var(--ink);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;margin-bottom:16px;box-shadow:var(--sh)}
+.card.tight{padding:16px}
 
-  .pickrow{display:flex;gap:6px}
-  .pickrow select{flex:1}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 12px}
-  .chip{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule);border-radius:999px;padding:3px 6px 3px 12px;font-size:13px;background:#FCFDFC}
-  .chip.locked{padding-right:12px;border-color:#B9C6C3}
-  .chip button{border:0;background:none;cursor:pointer;color:var(--ink-soft);font:inherit;font-size:15px;line-height:1;padding:0 5px}
-  .chip button:hover{color:var(--loss)}
-  .addsrc{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-  .addsrc > div{min-width:170px}
-  .seg{flex-wrap:wrap}
-  details.stream{border:1px solid var(--rule);border-radius:var(--radius);padding:11px 14px;margin-bottom:9px;background:#FCFDFC}
-  details.stream[open]{background:#fff;padding-bottom:16px}
-  details.stream summary{cursor:pointer;list-style:none}
-  details.stream summary::-webkit-details-marker{display:none}
-  details.stream summary:before{content:'+';display:inline-block;width:15px;color:var(--brass);font-weight:700}
-  details.stream[open] summary:before{content:'\2013'}
-  details.stream summary:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+/* stream pills */
+.pills{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{border:1.5px solid var(--line);background:var(--card-2);color:var(--tx-2);border-radius:999px;padding:9px 17px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.pill .d{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.75}
+.pill:hover{border-color:var(--tx-3);color:var(--tx)}
+.pill.on{color:#fff;border-color:transparent}
+.pill.on .d{background:rgba(255,255,255,.9);opacity:1}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px 16px}
-  label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:4px}
-  input,select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--rule);border-radius:var(--radius);background:#FCFDFC;color:var(--ink)}
-  input:focus,select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:0;border-color:var(--brass)}
-  input.num{text-align:right}
-  .calc{margin-top:16px;border-top:1px solid var(--rule);padding-top:14px;display:flex;gap:24px;align-items:baseline;flex-wrap:wrap}
-  .calc .net{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-size:26px;color:var(--gain)}
-  .actions{margin-left:auto;display:flex;gap:8px}
-  button.go{background:var(--ink);color:#fff;border:0;border-radius:var(--radius);padding:10px 18px;font:inherit;font-size:14px;cursor:pointer}
-  button.ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:var(--radius);padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
-  button.go:hover{background:#0B1920}
-  button.ghost:hover{border-color:var(--ink)}
+/* big amount */
+.amtbox{background:var(--field);border:2px solid var(--line);border-radius:var(--r-md);padding:16px 18px;transition:border-color .15s}
+.amtbox:focus-within{border-color:var(--brand)}
+.amtbox label{display:block;font-size:12.5px;font-weight:700;color:var(--tx-2);margin-bottom:6px}
+.amtrow{display:flex;align-items:baseline;gap:9px}
+.amtrow .cur{font-size:24px;font-weight:700;color:var(--tx-3)}
+.amtrow input{flex:1;border:0;background:none;font:inherit;font-size:36px;font-weight:800;letter-spacing:-.03em;color:var(--tx);padding:0;width:100%;outline:0}
+.amtrow input::placeholder{color:var(--tx-3);font-weight:700}
 
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  th{text-align:left;font-weight:600;font-size:12px;color:var(--ink-soft);border-bottom:1px solid var(--ink);padding:6px 8px}
-  th.num{text-align:right}
-  td{padding:7px 8px;border-bottom:1px solid var(--rule)}
-  tbody tr:hover{background:#F7F9F8}
-  tfoot td{border-top:2px solid var(--ink);border-bottom:0;font-weight:600;padding-top:9px}
-  .tag{font-size:11px;border:1px solid var(--rule);border-radius:3px;padding:1px 6px;color:var(--ink-soft)}
-  .rowbtn{border:0;background:none;color:var(--ink-soft);cursor:pointer;font:inherit;font-size:13px;padding:2px 4px}
-  .rowbtn:hover{color:var(--loss);text-decoration:underline}
-  .scroll{overflow-x:auto}
-  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
-  .filters > div{min-width:130px}
-  .empty{padding:26px 0;color:var(--ink-soft);font-size:14px}
-  pre{background:#0F1E26;color:#DCE6E4;padding:14px;border-radius:var(--radius);overflow:auto;font-size:12px;line-height:1.45}
-  ol.steps{padding-left:18px;margin:8px 0 14px}
-  ol.steps li{margin-bottom:5px;font-size:14px}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:14px;opacity:0;transition:opacity .18s;pointer-events:none;z-index:9}
-  .toast.show{opacity:1}
-  svg text{font-size:11px;fill:var(--ink-soft)}
-  @media (max-width:640px){
-    .hero .big{font-size:32px}
-    .spark{display:none}
-    .wrap{padding:14px 12px 70px}
-  }
-  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+.calcline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 4px;padding:14px 16px;border-radius:var(--r-md);background:var(--card-2)}
+.calcline .keep{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--up)}
+.chg{font-size:13px;font-weight:600;color:var(--down)}
+
+.f{margin-top:16px}
+.f label{display:block;font-size:12.5px;font-weight:700;color:var(--tx-2);margin-bottom:7px}
+input,select,textarea{width:100%;font:inherit;font-size:15px;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--field);color:var(--tx);outline:0}
+input:focus,select:focus{border-color:var(--brand)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.chipset{display:flex;gap:8px;flex-wrap:wrap}
+.chipset button{border:1.5px solid var(--line);background:var(--field);color:var(--tx-2);border-radius:999px;padding:9px 15px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.chipset button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+details.more{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+details.more summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--brand);list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary:before{content:'+ ';font-weight:800}
+details.more[open] summary:before{content:'– '}
+
+.btn{border:0;border-radius:var(--r-sm);padding:15px 24px;font:inherit;font-size:15.5px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;box-shadow:0 8px 20px rgba(91,75,245,.34)}
+.btn:hover{filter:brightness(1.07)}
+.btn.wide{width:100%;margin-top:20px}
+.btn.ghost{background:var(--card-2);color:var(--tx);border:1.5px solid var(--line);box-shadow:none;padding:11px 18px;font-size:14px}
+.btn.ghost:hover{border-color:var(--brand);filter:none}
+.btn.sm{padding:9px 16px;font-size:13.5px}
+
+/* entry rows */
+.entry{display:flex;align-items:center;gap:13px;padding:14px 4px;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:0}
+.av{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;flex:none}
+.entry .who{flex:1;min-width:0}
+.entry .who b{font-weight:700;font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .who span{font-size:12.5px;color:var(--tx-2)}
+.entry .val{text-align:right;flex:none}
+.entry .val b{font-weight:800;font-size:16px;color:var(--up);display:block;letter-spacing:-.02em}
+.entry .val span{font-size:12px;color:var(--tx-3)}
+.entry .act{display:flex;gap:2px;flex:none}
+.entry .act button{border:0;background:none;color:var(--tx-3);cursor:pointer;font-size:15px;padding:6px 7px;border-radius:9px}
+.entry .act button:hover{background:var(--card-2);color:var(--down)}
+.dhead{display:flex;justify-content:space-between;align-items:baseline;padding:16px 4px 6px;font-size:12.5px;font-weight:700;color:var(--tx-2)}
+
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.sum div{background:var(--card-2);border-radius:var(--r-md);padding:14px}
+.sum .k{font-size:11.5px;font-weight:700;color:var(--tx-2);margin-bottom:5px}
+.sum .v{font-size:19px;font-weight:800;letter-spacing:-.025em}
+
+/* trends */
+.legend{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+.lg{display:flex;align-items:center;gap:11px}
+.lg .d{width:11px;height:11px;border-radius:4px;flex:none}
+.lg .n{flex:1;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lg .p{font-size:13px;color:var(--tx-2);font-weight:600;min-width:42px;text-align:right}
+.lg .v{font-weight:700;font-size:14.5px;min-width:96px;text-align:right}
+.stack{display:flex;height:15px;border-radius:8px;overflow:hidden;gap:3px;margin-bottom:4px}
+.stack i{display:block;height:100%;border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11.5px;font-weight:700;color:var(--tx-2);padding:9px 10px;border-bottom:1.5px solid var(--line)}
+th.num{text-align:right}
+td{padding:11px 10px;border-bottom:1px solid var(--line)}
+tbody tr:hover{background:var(--card-2)}
+tfoot td{font-weight:700;border-bottom:0;border-top:1.5px solid var(--line)}
+.scroll{overflow-x:auto;margin:0 -6px;padding:0 6px}
+.empty{text-align:center;padding:44px 20px;color:var(--tx-2)}
+.empty .big{font-size:40px;margin-bottom:10px}
+.tabsm{display:inline-flex;background:var(--card-2);border-radius:11px;padding:4px;gap:3px;margin-bottom:18px}
+.tabsm button{border:0;background:none;border-radius:8px;padding:7px 15px;font:inherit;font-size:13.5px;font-weight:600;color:var(--tx-2);cursor:pointer}
+.tabsm button.on{background:var(--card);color:var(--tx);box-shadow:var(--sh)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.kv > div{background:var(--card-2);border-radius:var(--r-md);padding:15px}
+.kv .k{font-size:11.5px;font-weight:700;color:var(--tx-2);margin-bottom:5px}
+.kv .v{font-size:18px;font-weight:800;letter-spacing:-.02em}
+
+/* stream editor */
+details.st{border:1.5px solid var(--line);border-radius:var(--r-md);padding:15px 17px;margin-bottom:11px;background:var(--card-2)}
+details.st[open]{background:var(--card);border-color:var(--brand)}
+details.st summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;font-weight:700}
+details.st summary::-webkit-details-marker{display:none}
+.sw{display:flex;gap:9px;flex-wrap:wrap;margin-top:7px}
+.sw button{width:32px;height:32px;border-radius:11px;border:3px solid transparent;cursor:pointer}
+.sw button.on{border-color:var(--tx)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0 14px}
+.tag{display:inline-flex;align-items:center;gap:3px;border:1.5px solid var(--line);border-radius:999px;padding:6px 9px 6px 14px;font-size:13.5px;font-weight:600;background:var(--field)}
+.tag.lk{padding-right:14px;color:var(--tx-2)}
+.tag button{border:0;background:none;cursor:pointer;color:var(--tx-3);font-size:16px;line-height:1;padding:0 5px}
+.tag button:hover{color:var(--down)}
+
+pre{background:#0A0D1C;color:#C9D2FF;padding:16px;border-radius:var(--r-sm);overflow:auto;font-size:11.5px;line-height:1.55}
+ol.steps{padding-left:20px;margin:10px 0 16px} ol.steps li{margin-bottom:7px;font-size:14.5px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(12px);background:var(--tx);color:var(--bg);padding:13px 24px;border-radius:999px;font-size:14.5px;font-weight:700;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+svg text{font-size:11px;fill:var(--tx-2);font-weight:600;font-family:var(--f)}
+
+@media (max-width:760px){
+  .wrap{padding:14px 13px 110px}
+  .card{padding:17px;border-radius:20px}
+  .hero{padding:20px;border-radius:20px}
+  .spark{display:none}
+  nav{position:fixed;left:12px;right:12px;bottom:12px;z-index:50;margin:0;padding:7px;box-shadow:0 -2px 30px rgba(0,0,0,.16)}
+  nav button{flex-direction:column;gap:4px;font-size:11px;padding:8px 4px}
+  nav svg{width:20px;height:20px}
+  .sum{grid-template-columns:1fr 1fr}
+  .sum div:first-child{grid-column:1/-1}
+  .toast{bottom:106px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="wrap">
-  <header class="top">
-    <h1>Income ledger</h1>
-    <span class="sub" id="periodLabel"></span>
-    <button class="pill" id="connPill"><span class="dot" id="connDot"></span><span id="connText">Not connected</span></button>
+  <header>
+    <div class="brand"><span class="logo" id="logoGlyph">Rs</span><span id="brandName">Income</span></div>
+    <div class="hbtns">
+      <button class="icb" id="themeBtn" title="Switch theme" aria-label="Switch theme">◐</button>
+      <button class="icb" id="connBtn" title="Sync status" aria-label="Sync status">⟳</button>
+    </div>
   </header>
 
-  <section class="hero">
-    <div>
-      <div class="lbl" id="heroMonthLbl">This month, after charges</div>
-      <div class="big" id="heroNet">0.00</div>
-    </div>
-    <div class="col"><div class="lbl">Gross</div><div class="v" id="heroGross">0.00</div></div>
-    <div class="col"><div class="lbl">Charges deducted</div><div class="v loss" id="heroCharges">0.00</div></div>
-    <div class="col"><div class="lbl">Entries</div><div class="v" id="heroCount">0</div></div>
-    <div class="col"><div class="lbl">Top stream</div><div class="v" id="heroTop">&mdash;</div></div>
-    <div class="spark" id="spark"></div>
-  </section>
+  <div id="hero"></div>
 
   <nav>
-    <button data-tab="record" class="on">Record income</button>
-    <button data-tab="ledger">Ledger</button>
-    <button data-tab="trends">Trends</button>
-    <button data-tab="setup">Sheet setup</button>
+    <button data-tab="add" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+    <button data-tab="ledger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Ledger</span></button>
+    <button data-tab="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg><span>Trends</span></button>
+    <button data-tab="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2L5.6 5.6"/></svg><span>Setup</span></button>
   </nav>
 
-  <!-- RECORD -->
-  <section id="tab-record">
-    <div class="panel">
-      <div class="seg" id="catSeg"></div>
-
-      <div class="grid" id="formGrid"></div>
-
-      <div class="calc">
-        <div>
-          <div class="lbl small muted">Net to you</div>
-          <div class="net" id="liveNet">0.00</div>
-        </div>
-        <div class="small muted" id="liveBreak"></div>
-        <div class="actions">
-          <button class="ghost" id="btnReset">Clear</button>
-          <button class="go" id="btnSave">Save entry</button>
-        </div>
-      </div>
+  <section id="view-add">
+    <div class="card">
+      <div class="pills" id="streamPills"></div>
+      <div id="entryForm"></div>
+      <button class="btn wide" id="btnSave">Save entry</button>
     </div>
-    <div class="panel">
-      <h2>Your income streams</h2>
-      <p class="small muted" style="margin-top:-4px">Rename these, delete them, or add your own. Each stream decides its own field labels, whether commission is deducted, and what its sources are called.</p>
+    <div class="card" id="recentCard"></div>
+    <div class="card">
+      <h2>Income streams</h2>
+      <p class="sm mut" style="margin:-8px 0 16px">Add your own streams, pick their colour, and set whether commission comes off.</p>
       <div id="streamList"></div>
-      <div class="addsrc" style="margin-top:6px">
-        <div style="flex:1"><label for="newStreamName">New income stream</label><input id="newStreamName" placeholder="Consultancy, room rent, farm produce, resale"></div>
-        <button class="ghost" id="btnAddStream">Add stream</button>
+      <div class="row" style="margin-top:14px">
+        <div><label for="newStreamName">New stream</label><input id="newStreamName" placeholder="Consultancy, room rent, resale"></div>
       </div>
+      <button class="btn ghost" id="btnAddStream" style="margin-top:14px">Add stream</button>
     </div>
   </section>
 
-  <!-- LEDGER -->
-  <section id="tab-ledger" hidden>
-    <div class="panel">
-      <div class="filters">
+  <section id="view-ledger" hidden>
+    <div class="card">
+      <div class="sum" id="ledgerSum"></div>
+      <div class="row" style="margin-bottom:14px">
         <div><label for="fMonth">Month</label><select id="fMonth"></select></div>
-        <div><label for="fCat">Category</label><select id="fCat"><option>All</option></select></div>
-        <div><label for="fSrc">Source</label><select id="fSrc"><option>All</option></select></div>
-        <div style="flex:1"><label for="fText">Search source, reference or note</label><input id="fText" placeholder="e.g. tuition, T-104"></div>
-        <button class="ghost" id="btnCsv">Export CSV</button>
+        <div><label for="fCat">Stream</label><select id="fCat"></select></div>
+        <div><label for="fSrc">Source</label><select id="fSrc"></select></div>
+        <div><label for="fText">Search</label><input id="fText" placeholder="Source, reference or note"></div>
       </div>
-      <div class="scroll"><table id="ledgerTbl">
-        <thead><tr>
-          <th>Date</th><th>Category</th><th>Source</th><th>Reference</th>
-          <th class="num">Gross</th><th class="num">Charges</th><th class="num">Net</th><th>Note</th><th></th>
-        </tr></thead>
-        <tbody></tbody>
-        <tfoot></tfoot>
-      </table></div>
-      <div class="empty" id="ledgerEmpty" hidden>No entries yet. Record your first one on the Record income tab.</div>
+      <div id="ledgerList"></div>
+      <button class="btn ghost sm" id="btnCsv" style="margin-top:16px">Export CSV</button>
     </div>
   </section>
 
-  <!-- TRENDS -->
-  <section id="tab-trends" hidden>
-    <div class="panel">
-      <h2>Month by month</h2>
-      <p class="small muted" style="margin-top:-4px">Solid bar is what you kept. The band above it is what charges took off the top.</p>
+  <section id="view-trends" hidden>
+    <div class="card">
+      <h2>Monthly earnings</h2>
+      <div class="tabsm" id="rangeTabs">
+        <button data-r="6" class="on">6 months</button><button data-r="12">12 months</button><button data-r="99">All</button>
+      </div>
       <div id="chartMonthly"></div>
     </div>
-    <div class="panel">
-      <h2>Where it came from</h2>
-      <div class="filters"><div><label for="fYear">Period</label><select id="fYear"></select></div></div>
-      <div id="chartCat"></div>
+    <div class="card">
+      <h2>Where it comes from</h2>
+      <div class="tabsm" id="yearTabs"></div>
+      <div id="splitChart"></div>
     </div>
-    <div class="panel">
-      <h2>Monthly figures</h2>
-      <div class="scroll"><table id="monthTbl">
-        <thead><tr><th>Month</th><th class="num">Uber net</th><th class="num">Salary net</th><th class="num">Other net</th><th class="num">Gross</th><th class="num">Charges</th><th class="num">Net</th></tr></thead>
-        <tbody></tbody><tfoot></tfoot>
-      </table></div>
-    </div>
-    <div class="panel">
+    <div class="card">
       <h2>Stream detail</h2>
-      <div class="filters"><div><label for="fStream">Stream</label><select id="fStream"></select></div></div>
-      <div class="grid" id="streamStats"></div>
+      <div class="pills" id="detailPills"></div>
+      <div class="kv" id="streamStats"></div>
+    </div>
+    <div class="card">
+      <h2>Month by month</h2>
+      <div class="scroll"><table id="monthTbl"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
     </div>
   </section>
 
-  <!-- SETUP -->
-  <section id="tab-setup" hidden>
-    <div class="panel">
-      <h2>Connect your Google Sheet</h2>
-      <div class="grid">
-        <div style="grid-column:1/-1">
-          <label for="epUrl">Web app URL from Apps Script</label>
-          <input id="epUrl" placeholder="https://script.google.com/macros/s/..../exec">
-        </div>
-        <div><label for="setCur">Currency prefix</label><input id="setCur" value="Rs"></div>
+  <section id="view-setup" hidden>
+    <div class="card">
+      <h2>Google Sheet</h2>
+      <div class="f"><label for="epUrl">Web app URL from Apps Script</label><input id="epUrl" placeholder="https://script.google.com/macros/s/..../exec"></div>
+      <div class="row" style="margin-top:14px">
+        <div><label for="setCurSel">Currency</label><select id="setCurSel"></select></div>
+        <div id="curCustom" hidden><label for="setCur">Custom symbol</label><input id="setCur" value="Rs" maxlength="6"></div>
+        <div><label for="setName">App name</label><input id="setName" value="Income"></div>
       </div>
-      <div class="calc">
-        <span class="small muted" id="syncInfo"></span>
-        <div class="actions">
-          <button class="ghost" id="btnPull">Pull from sheet</button>
-          <button class="ghost" id="btnPush">Push unsynced</button>
-          <button class="go" id="btnSaveSet">Save settings</button>
-        </div>
+      <p class="sm mut" id="syncInfo" style="margin:16px 0 0"></p>
+      <div class="chipset" style="margin-top:14px">
+        <button class="btn ghost sm" id="btnPull">Pull from sheet</button>
+        <button class="btn ghost sm" id="btnPush">Push unsynced</button>
+        <button class="btn sm" id="btnSaveSet">Save settings</button>
       </div>
     </div>
-
-    <div class="panel">
+    <div class="card">
       <h2>One-time setup</h2>
       <ol class="steps">
-        <li>Create a Google Sheet named anything you like.</li>
-        <li>In that sheet open Extensions, then Apps Script.</li>
-        <li>Delete whatever is there, paste the code below, save.</li>
-        <li>Click Deploy, then New deployment, choose Web app.</li>
-        <li>Set Execute as: Me. Set Who has access: Anyone. Deploy and authorise.</li>
-        <li>Copy the web app URL that ends in /exec and paste it in the field above, then save settings.</li>
+        <li>Open your Google Sheet, then Extensions, then Apps Script.</li>
+        <li>Delete what is there, paste the code below, save.</li>
+        <li>Deploy, New deployment, Web app.</li>
+        <li>Execute as: Me. Who has access: Anyone. Deploy and authorise.</li>
+        <li>Copy the URL ending in /exec into the field above and save.</li>
       </ol>
-      <button class="ghost" id="btnCopyCode">Copy the code</button>
+      <button class="btn ghost sm" id="btnCopyCode" style="margin-bottom:14px">Copy the code</button>
       <pre id="gsCode">const SHEET_NAME = 'Income';
 const HEADERS = ['ID','Date','Month','Category','Source','Reference','Gross','Charges','Net','Note'];
 
@@ -342,15 +380,13 @@ function deleteRow_(sh, id) {
     if (String(ids[i][0]) === String(id)) { sh.deleteRow(i + 2); }
   }
 }</pre>
-      <p class="small muted">Every entry is one row. Uber commission and other deductions land in the Charges column, so the Net column is what actually reached you.</p>
     </div>
   </section>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-/* ---------- storage: Claude artifact store, else browser store, else memory ---------- */
+/* ---------- storage ---------- */
 const mem = {};
 const store = {
   async get(k){
@@ -359,7 +395,7 @@ const store = {
     return mem[k] !== undefined ? mem[k] : null;
   },
   async set(k,v){
-    mem[k] = v;
+    mem[k]=v;
     try{ if(window.storage){ await window.storage.set(k, JSON.stringify(v)); return; } }catch(e){}
     try{ if(window.localStorage){ localStorage.setItem(k, JSON.stringify(v)); } }catch(e){}
   }
@@ -368,664 +404,622 @@ const store = {
 /* ---------- helpers ---------- */
 const el = id => document.getElementById(id);
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const n = v => { const x = parseFloat(String(v).replace(/,/g,'')); return isNaN(x) ? 0 : x; };
+const n = v => { const x = parseFloat(String(v).replace(/,/g,'')); return isNaN(x)?0:x; };
 const fmt = v => (Number(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0 = v => Math.round(Number(v)||0).toLocaleString('en-US');
 const today = () => new Date().toISOString().slice(0,10);
 const monthOf = d => String(d).slice(0,7);
-const monthName = m => {
-  const p = m.split('-');
-  return new Date(p[0], Number(p[1])-1, 1).toLocaleString('en-US',{month:'short'}) + ' ' + p[0];
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const monthName = m => MN[Number(m.split('-')[1])-1] + ' ' + m.split('-')[0];
+const monthShort = m => MN[Number(m.split('-')[1])-1];
+const dayLabel = d => {
+  if(d === today()) return 'Today';
+  const y = new Date(Date.now()-864e5).toISOString().slice(0,10);
+  if(d === y) return 'Yesterday';
+  const p = d.split('-');
+  return Number(p[2]) + ' ' + MN[Number(p[1])-1] + ' ' + p[0];
 };
-function toast(msg){ const t = el('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2400); }
+function toast(m){ const t = el('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove('show'), 2400); }
 
-/* ---------- state ---------- */
-const BLANK = () => ({
-  name:'', dateLabel:'Date received', amountLabel:'Amount received',
-  deductionLabel:'Charges or cost', commission:'', refPrefix:'', refLabel:'Reference',
-  unit:'entry', tips:false, sources:[]
-});
+const CURRENCIES = [
+  {c:'LKR', s:'Rs',  n:'Sri Lankan rupee'},
+  {c:'USD', s:'$',   n:'US dollar'},
+  {c:'EUR', s:'€',   n:'Euro'},
+  {c:'GBP', s:'£',   n:'Pound sterling'},
+  {c:'INR', s:'₹',   n:'Indian rupee'},
+  {c:'AUD', s:'A$',  n:'Australian dollar'},
+  {c:'CAD', s:'C$',  n:'Canadian dollar'},
+  {c:'AED', s:'AED', n:'UAE dirham'},
+  {c:'SAR', s:'SAR', n:'Saudi riyal'},
+  {c:'QAR', s:'QAR', n:'Qatari riyal'},
+  {c:'JPY', s:'¥',   n:'Japanese yen'},
+  {c:'CNY', s:'CN¥', n:'Chinese yuan'},
+  {c:'SGD', s:'S$',  n:'Singapore dollar'},
+  {c:'MYR', s:'RM',  n:'Malaysian ringgit'},
+  {c:'THB', s:'฿',   n:'Thai baht'},
+  {c:'MVR', s:'MVR', n:'Maldivian rufiyaa'},
+  {c:'PKR', s:'PKR', n:'Pakistani rupee'},
+  {c:'BDT', s:'৳',   n:'Bangladeshi taka'},
+  {c:'ZAR', s:'R',   n:'South African rand'},
+  {c:'CHF', s:'CHF', n:'Swiss franc'},
+  {c:'NZD', s:'NZ$', n:'New Zealand dollar'},
+  {c:'KRW', s:'₩',   n:'South Korean won'},
+  {c:'CUSTOM', s:'', n:'Something else'}
+];
+
+const PALETTE = ['#5B4BF5','#00A870','#F59E0B','#F2547D','#06B6D4','#A855F7','#EC4899','#14B8A6','#F97316','#3B82F6'];
+
+const BLANK = () => ({name:'', dateLabel:'Date', amountLabel:'Amount received', deductionLabel:'Charges or cost',
+  commission:'', refPrefix:'', refLabel:'Reference', unit:'entry', tips:false, sources:[], color:''});
 const SEED = [
   {name:'Uber', dateLabel:'Trip date', amountLabel:'Fare collected', deductionLabel:'Other deductions',
-   commission:25, refPrefix:'T', refLabel:'Trip reference', unit:'trip', tips:true, sources:['Uber']},
-  {name:'Salary', dateLabel:'Pay date', amountLabel:'Gross salary', deductionLabel:'Deductions (EPF, PAYE, loans)',
-   commission:'', refPrefix:'', refLabel:'Payslip reference', unit:'payment', tips:false, sources:[]},
+   commission:25, refPrefix:'T', refLabel:'Trip reference', unit:'trip', tips:true, sources:['Uber'], color:'#5B4BF5'},
+  {name:'Salary', dateLabel:'Pay date', amountLabel:'Gross salary', deductionLabel:'Deductions (EPF, PAYE)',
+   commission:'', refPrefix:'', refLabel:'Payslip reference', unit:'payment', tips:false, sources:[], color:'#00A870'},
   {name:'Other', dateLabel:'Date received', amountLabel:'Amount received', deductionLabel:'Charges or cost',
-   commission:'', refPrefix:'', refLabel:'Reference', unit:'entry', tips:false, sources:[]}
+   commission:'', refPrefix:'', refLabel:'Reference', unit:'entry', tips:false, sources:[], color:'#F59E0B'}
 ];
 
 const state = {
-  rows: [],
-  settings: { endpoint:'', currency:'Rs', streams:null },
-  cat: 'Uber',
-  editing: null
+  rows: [], cat:'', editing:null, range:6,
+  settings:{ endpoint:'', currency:'Rs', currencyCode:'LKR', appName:'Income', theme:'light', streams:null }
 };
-
 const money = v => state.settings.currency + ' ' + fmt(v);
+const money0 = v => state.settings.currency + ' ' + fmt0(v);
 const streams = () => state.settings.streams;
-const streamOf = name => streams().filter(s => s.name === name)[0] || Object.assign(BLANK(), {name:name});
+const streamOf = nm => streams().filter(s => s.name === nm)[0] || Object.assign(BLANK(), {name:nm, color:'#7A7F9E'});
 const hasComm = s => s.commission !== '' && s.commission !== null && s.commission !== undefined;
+const colorOf = nm => streamOf(nm).color || '#7A7F9E';
 
-/* ---------- google sheet transport ---------- */
+/* ---------- sheet ---------- */
 async function callSheet(action, payload){
   const url = state.settings.endpoint;
   if(!url) throw new Error('No web app URL saved');
   try{
-    const r = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action, payload}),
-      redirect:'follow'
-    });
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action, payload}), redirect:'follow'});
     const j = await r.json();
     if(!j.ok) throw new Error(j.error || 'Sheet returned an error');
     return j;
   }catch(e){
-    const q = url + '?action=' + encodeURIComponent(action) +
-              (payload ? '&payload=' + encodeURIComponent(JSON.stringify(payload)) : '');
-    const r2 = await fetch(q);
-    const j2 = await r2.json();
+    const q = url + '?action=' + encodeURIComponent(action) + (payload ? '&payload=' + encodeURIComponent(JSON.stringify(payload)) : '');
+    const j2 = await (await fetch(q)).json();
     if(!j2.ok) throw new Error(j2.error || 'Sheet returned an error');
     return j2;
   }
 }
-const strip = r => ({id:r.id, date:r.date, category:r.category, source:r.source, ref:r.ref, gross:r.gross, charges:r.charges, net:r.net, note:r.note});
+const strip = r => ({id:r.id,date:r.date,category:r.category,source:r.source,ref:r.ref,gross:r.gross,charges:r.charges,net:r.net,note:r.note});
 
 async function pull(){
   const j = await callSheet('list', null);
-  state.rows = j.rows.map(r => Object.assign({}, r, {synced:true, inSheet:true}));
+  const fetched = j.rows.map(r => Object.assign({}, r, {synced:true, inSheet:true}));
+  const ids = new Set(fetched.map(r => r.id));
+  state.rows = fetched.concat(state.rows.filter(r => !r.inSheet && !ids.has(r.id)));
   adoptStreams();
-  await persist();
-  renderAll();
-  toast('Pulled ' + state.rows.length + ' rows from the sheet');
+  await persist(); renderAll();
+  toast('Pulled ' + fetched.length + ' rows');
 }
-
 async function pushUnsynced(){
   const pending = state.rows.filter(r => !r.synced);
-  if(!pending.length){ toast('Everything is already in the sheet'); return; }
-  const fresh = pending.filter(r => !r.inSheet);
-  const changed = pending.filter(r => r.inSheet);
-  for(let i=0; i<fresh.length; i+=25){ await callSheet('bulk', fresh.slice(i, i+25).map(strip)); }
-  for(let i=0; i<changed.length; i++){ await callSheet('update', strip(changed[i])); }
+  if(!pending.length){ toast('Everything is already synced'); return; }
+  const fresh = pending.filter(r => !r.inSheet), changed = pending.filter(r => r.inSheet);
+  for(let i=0;i<fresh.length;i+=25){ await callSheet('bulk', fresh.slice(i,i+25).map(strip)); }
+  for(let i=0;i<changed.length;i++){ await callSheet('update', strip(changed[i])); }
   state.rows.forEach(r => { r.synced = true; r.inSheet = true; });
-  await persist();
-  renderAll();
+  await persist(); renderAll();
   toast('Synced ' + pending.length + ' entries');
 }
-
-/* ---------- persistence ---------- */
-async function persist(){
-  await store.set('income_rows', state.rows);
-  await store.set('income_settings', state.settings);
-}
-
+async function persist(){ await store.set('income_rows', state.rows); await store.set('income_settings', state.settings); }
 function adoptStreams(){
   state.rows.forEach(r => {
     if(r.category && !streams().some(s => s.name === r.category)){
-      streams().push(Object.assign(BLANK(), {name:r.category}));
+      streams().push(Object.assign(BLANK(), {name:r.category, color:PALETTE[streams().length % PALETTE.length]}));
     }
   });
 }
 
+/* ---------- boot ---------- */
 async function boot(){
-  const rows = await store.get('income_rows');
-  const set = await store.get('income_settings');
+  const rows = await store.get('income_rows'), set = await store.get('income_settings');
   if(Array.isArray(rows)) state.rows = rows;
   if(set) state.settings = Object.assign(state.settings, set);
   if(!Array.isArray(state.settings.streams) || !state.settings.streams.length){
     const old = state.settings.sources || {};
-    state.settings.streams = SEED.map(s => Object.assign({}, s, {sources: (old[s.name] || s.sources).slice()}));
+    state.settings.streams = SEED.map(s => Object.assign({}, s, {sources:(old[s.name] || s.sources).slice()}));
   }
-  streams().forEach(s => { if(!Array.isArray(s.sources)) s.sources = []; });
+  streams().forEach((s,i) => { if(!Array.isArray(s.sources)) s.sources = []; if(!s.color) s.color = PALETTE[i % PALETTE.length]; });
   adoptStreams();
   state.cat = streams()[0] ? streams()[0].name : 'Other';
+  applyTheme();
   el('epUrl').value = state.settings.endpoint;
+  el('setCurSel').innerHTML = CURRENCIES.map(x => '<option value="' + x.c + '">' +
+    (x.c === 'CUSTOM' ? x.n : x.c + ' · ' + x.n + ' · ' + x.s) + '</option>').join('');
+  el('setCurSel').value = state.settings.currencyCode || 'CUSTOM';
   el('setCur').value = state.settings.currency;
-  renderTabs();
-  buildForm();
+  el('curCustom').hidden = el('setCurSel').value !== 'CUSTOM';
+  el('setName').value = state.settings.appName;
+  el('brandName').textContent = state.settings.appName;
+  applyCurrency();
   renderAll();
-  if(state.settings.endpoint){ try{ await pull(); }catch(e){ toast('Sheet not reachable: ' + e.message); } }
+  if(state.settings.endpoint){ try{ await pull(); }catch(e){ toast('Sheet not reachable'); } }
+}
+function applyCurrency(){
+  const g = state.settings.currency || 'Rs';
+  el('logoGlyph').textContent = g.length > 3 ? g.slice(0,2) : g;
 }
 
-/* ---------- entry form ---------- */
-function fieldsFor(s){
-  const f = [
-    {k:'date', l:s.dateLabel || 'Date', t:'date'},
-    {k:'source', l:'Income source', t:'src'},
-    {k:'ref', l:s.refLabel || 'Reference', t:'text', ph: s.refPrefix ? 'auto' : ''},
-    {k:'gross', l:s.amountLabel || 'Amount', t:'num'}
-  ];
-  if(s.tips) f.push({k:'tips', l:'Tips and bonus', t:'num'});
-  if(hasComm(s)){
-    f.push({k:'commPct', l:'Commission %', t:'num'});
-    f.push({k:'commAmt', l:'Commission amount', t:'num'});
-  }
-  f.push({k:'other', l:s.deductionLabel || 'Deductions', t:'num'});
-  f.push({k:'note', l:'Note', t:'text'});
-  return f;
+function applyTheme(){
+  const t = state.settings.theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
 }
 
-function renderTabs(){
-  el('catSeg').innerHTML = streams().map(s =>
-    '<button data-cat="' + esc(s.name) + '"' + (s.name === state.cat ? ' class="on"' : '') + '>' + esc(s.name) + '</button>').join('');
-  el('catSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
-    state.cat = b.dataset.cat; state.editing = null; el('btnSave').textContent = 'Save entry';
-    el('catSeg').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-    buildForm(true);
-  });
+/* ---------- aggregation ---------- */
+function months(){
+  const s = new Set(state.rows.map(r => monthOf(r.date))); s.add(monthOf(today()));
+  return Array.from(s).sort();
 }
-
-function buildForm(keepDate){
-  const s = streamOf(state.cat);
-  const prevDate = keepDate && el('f_date') ? el('f_date').value : today();
-  const g = el('formGrid');
-  g.innerHTML = '';
-  fieldsFor(s).forEach(f => {
-    const d = document.createElement('div');
-    if(f.k === 'note') d.style.gridColumn = '1/-1';
-    let inp;
-    if(f.t === 'date') inp = '<input type="date" id="f_date">';
-    else if(f.t === 'src') inp = srcPicker();
-    else inp = '<input id="f_' + f.k + '" class="' + (f.t==='num'?'num':'') + '" inputmode="' + (f.t==='num'?'decimal':'text') + '" placeholder="' + esc(f.ph||'') + '">';
-    d.innerHTML = '<label for="f_' + f.k + '">' + esc(f.l) + '</label>' + inp;
-    g.appendChild(d);
-  });
-  el('f_date').value = prevDate;
-  if(hasComm(s)) el('f_commPct').value = s.commission;
-  if(s.refPrefix) el('f_ref').placeholder = nextRef(s);
-  const sSel = el('f_source');
-  if(sSel) sSel.onchange = () => {
-    const nw = el('f_sourceNew');
-    nw.hidden = sSel.value !== '__new';
-    if(!nw.hidden) nw.focus();
-    live();
-  };
-  g.querySelectorAll('input').forEach(i => i.addEventListener('input', onInput));
-  live();
+function agg(rows){
+  return rows.reduce((a,r) => { a.gross+=r.gross; a.charges+=r.charges; a.net+=r.net; a.count++;
+    a.by[r.category] = (a.by[r.category]||0)+r.net; return a; }, {gross:0,charges:0,net:0,count:0,by:{}});
 }
-
-function srcPicker(){
-  return '<div class="pickrow"><select id="f_source">' +
-    sourcesFor(state.cat).map(x => '<option>' + esc(x) + '</option>').join('') +
-    '<option value="__new">Add a new source</option></select>' +
-    '<input id="f_sourceNew" hidden placeholder="Name it" style="flex:1"></div>';
-}
-
+const byMonth = m => state.rows.filter(r => monthOf(r.date) === m);
+function allCats(){ const s = new Set(streams().map(x => x.name)); state.rows.forEach(r => s.add(r.category)); return Array.from(s); }
 function sourcesFor(cat){
-  const set = new Set(streamOf(cat).sources || []);
-  state.rows.forEach(r => { if(r.category === cat && r.source) set.add(r.source); });
-  if(!set.size) set.add(cat);
-  return Array.from(set).sort();
+  const s = new Set(streamOf(cat).sources || []);
+  state.rows.forEach(r => { if(r.category === cat && r.source) s.add(r.source); });
+  if(!s.size) s.add(cat);
+  return Array.from(s).sort();
 }
-
-function addSource(cat, name){
-  if(!name) return;
+function addSource(cat, nm){
+  if(!nm) return;
   const s = streams().filter(x => x.name === cat)[0];
-  if(!s) return;
-  if(s.sources.indexOf(name) === -1) s.sources.push(name);
+  if(s && s.sources.indexOf(nm) === -1) s.sources.push(nm);
 }
-
 function nextRef(s){
   const re = new RegExp('^' + s.refPrefix + '-(\\d+)$');
   const nums = state.rows.filter(r => r.category === s.name && re.test(r.ref||'')).map(r => Number(re.exec(r.ref)[1]));
-  return s.refPrefix + '-' + String((nums.length ? Math.max.apply(null, nums) : 0) + 1).padStart(3,'0');
+  return s.refPrefix + '-' + String((nums.length ? Math.max.apply(null,nums) : 0)+1).padStart(3,'0');
+}
+
+/* ---------- render ---------- */
+function renderAll(){ renderHero(); renderPills(); renderForm(); renderRecent(); renderStreamList(); renderLedger(); renderTrends(); renderConn(); }
+
+function renderConn(){
+  const on = !!state.settings.endpoint, pending = state.rows.filter(r => !r.synced).length;
+  const b = el('connBtn');
+  b.className = 'icb ' + (!on ? 'off' : pending ? 'off' : 'live');
+  b.title = !on ? 'Sheet not connected' : pending ? pending + ' waiting to sync' : 'Sheet connected';
+  el('syncInfo').textContent = state.rows.length + ' entries stored · ' + pending + ' not yet in the sheet';
+}
+
+function renderHero(){
+  const m = monthOf(today());
+  const a = agg(byMonth(m));
+  const prevD = new Date(); prevD.setDate(1); prevD.setMonth(prevD.getMonth()-1);
+  const prev = agg(byMonth(prevD.toISOString().slice(0,7))).net;
+  const pct = prev ? ((a.net - prev)/prev*100) : null;
+  const ms = months().slice(-6), vals = ms.map(x => agg(byMonth(x)).net), mx = Math.max.apply(null, vals.concat([1]));
+  el('hero').innerHTML =
+    '<div class="hero"><div class="top"><span class="mlbl">' + monthName(m) + ' · after charges</span>' +
+      (pct === null ? '' : '<span class="delta">' + (pct>=0?'▲':'▼') + ' ' + Math.abs(pct).toFixed(0) + '% vs last month</span>') +
+    '</div>' +
+    '<div class="amt"><span class="cur">' + esc(state.settings.currency) + '</span>' + fmt0(a.net) + '</div>' +
+    '<div class="hstats">' +
+      '<div><div class="k">Gross</div><div class="v">' + fmt0(a.gross) + '</div></div>' +
+      '<div><div class="k">Charges</div><div class="v">' + fmt0(a.charges) + '</div></div>' +
+      '<div><div class="k">Entries</div><div class="v">' + a.count + '</div></div>' +
+      '<div class="spark">' + ms.map((x,i) => '<i class="' + (i===ms.length-1?'now':'') + '" style="height:' + Math.max(4, vals[i]/mx*56) + 'px" title="' + monthName(x) + ': ' + money0(vals[i]) + '"></i>').join('') + '</div>' +
+    '</div></div>';
+}
+
+function renderPills(){
+  el('streamPills').innerHTML = streams().map(s =>
+    '<button class="pill' + (s.name===state.cat?' on':'') + '" data-cat="' + esc(s.name) + '" style="' +
+    (s.name===state.cat ? 'background:' + s.color + ';' : 'color:' + s.color + ';') + '"><span class="d"></span>' + esc(s.name) + '</button>').join('');
+  el('streamPills').querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
+    state.cat = b.dataset.cat; state.editing = null; el('btnSave').textContent = 'Save entry';
+    renderPills(); renderForm();
+  });
+}
+
+function renderForm(){
+  const s = streamOf(state.cat);
+  const y = new Date(Date.now()-864e5).toISOString().slice(0,10);
+  el('entryForm').innerHTML =
+    '<div class="amtbox"><label for="f_gross">' + esc(s.amountLabel) + '</label>' +
+      '<div class="amtrow"><span class="cur">' + esc(state.settings.currency) + '</span>' +
+      '<input id="f_gross" inputmode="decimal" placeholder="0.00" autocomplete="off"></div></div>' +
+    '<div class="calcline" id="calcLine"></div>' +
+    '<div class="f"><label>' + esc(s.dateLabel) + '</label><div class="chipset" id="dateChips">' +
+      '<button data-d="' + today() + '" class="on">Today</button><button data-d="' + y + '">Yesterday</button>' +
+      '</div><input type="date" id="f_date" style="margin-top:9px" value="' + today() + '"></div>' +
+    '<div class="f"><label for="f_source">Income source</label><div style="display:flex;gap:8px">' +
+      '<select id="f_source" style="flex:1">' + sourcesFor(s.name).map(x => '<option>' + esc(x) + '</option>').join('') +
+      '<option value="__new">+ New source</option></select></div>' +
+      '<input id="f_sourceNew" hidden placeholder="Name the new source" style="margin-top:9px"></div>' +
+    '<details class="more"><summary>More details</summary><div class="row" style="margin-top:14px">' +
+      (s.tips ? '<div><label for="f_tips">Tips and bonus</label><input id="f_tips" class="num" inputmode="decimal" placeholder="0.00"></div>' : '') +
+      (hasComm(s) ? '<div><label for="f_commPct">Commission %</label><input id="f_commPct" class="num" inputmode="decimal" value="' + s.commission + '"></div>' +
+                    '<div><label for="f_commAmt">Commission amount</label><input id="f_commAmt" class="num" inputmode="decimal"></div>' : '') +
+      '<div><label for="f_other">' + esc(s.deductionLabel) + '</label><input id="f_other" class="num" inputmode="decimal" placeholder="0.00"></div>' +
+      '<div><label for="f_ref">' + esc(s.refLabel) + '</label><input id="f_ref" placeholder="' + (s.refPrefix ? esc(nextRef(s)) : '') + '"></div>' +
+      '<div style="grid-column:1/-1"><label for="f_note">Note</label><input id="f_note" placeholder="Optional"></div>' +
+    '</div></details>';
+
+  el('entryForm').querySelectorAll('input').forEach(i => i.addEventListener('input', onInput));
+  el('f_gross').addEventListener('keydown', e => { if(e.key === 'Enter') saveEntry(); });
+  el('dateChips').querySelectorAll('button').forEach(b => b.onclick = () => {
+    el('f_date').value = b.dataset.d;
+    el('dateChips').querySelectorAll('button').forEach(x => x.classList.toggle('on', x===b));
+  });
+  el('f_date').addEventListener('change', () => el('dateChips').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.d === el('f_date').value)));
+  el('f_source').onchange = () => { const w = el('f_sourceNew'); w.hidden = el('f_source').value !== '__new'; if(!w.hidden) w.focus(); };
+  live();
 }
 
 function onInput(e){
   const s = streamOf(state.cat);
   if(hasComm(s) && el('f_commPct')){
-    const gross = n(el('f_gross').value) + (s.tips ? n(el('f_tips').value) : 0);
-    if(e && e.target && e.target.id === 'f_commAmt'){
-      el('f_commPct').value = gross ? ((n(e.target.value)/gross)*100).toFixed(2) : '';
-    } else {
-      el('f_commAmt').value = gross ? (gross * n(el('f_commPct').value)/100).toFixed(2) : '';
-    }
+    const g = n(el('f_gross').value) + (el('f_tips') ? n(el('f_tips').value) : 0);
+    if(e && e.target && e.target.id === 'f_commAmt') el('f_commPct').value = g ? ((n(e.target.value)/g)*100).toFixed(2) : '';
+    else el('f_commAmt').value = g ? (g * n(el('f_commPct').value)/100).toFixed(2) : '';
   }
   live();
 }
 
 function readForm(){
   const s = streamOf(state.cat);
-  const v = k => { const x = el('f_' + k); return x ? x.value : ''; };
-  let gross = n(v('gross'));
-  if(s.tips) gross += n(v('tips'));
-  let source = v('source');
-  if(source === '__new') source = el('f_sourceNew') ? el('f_sourceNew').value.trim() : '';
-  let ref = v('ref');
-  if(!ref && s.refPrefix) ref = nextRef(s);
+  const v = k => { const x = el('f_'+k); return x ? x.value : ''; };
+  let gross = n(v('gross')); if(el('f_tips')) gross += n(v('tips'));
+  let source = v('source'); if(source === '__new') source = el('f_sourceNew') ? el('f_sourceNew').value.trim() : '';
+  let ref = v('ref'); if(!ref && s.refPrefix) ref = nextRef(s);
   const charges = (hasComm(s) ? n(v('commAmt')) : 0) + n(v('other'));
-  return {
-    id: state.editing || ('R' + Date.now().toString(36) + Math.floor(Math.random()*900+100)),
-    date: v('date') || today(),
-    category: s.name,
-    source: source || s.name,
-    ref: ref,
-    gross: +gross.toFixed(2),
-    charges: +charges.toFixed(2),
-    net: +(gross - charges).toFixed(2),
-    note: v('note'),
-    synced: false,
-    inSheet: false
-  };
+  return { id: state.editing || ('R'+Date.now().toString(36)+Math.floor(Math.random()*900+100)),
+    date: v('date')||today(), category:s.name, source: source||s.name, ref:ref,
+    gross:+gross.toFixed(2), charges:+charges.toFixed(2), net:+(gross-charges).toFixed(2),
+    note:v('note'), synced:false, inSheet:false };
 }
 
 function live(){
-  const r = readForm();
-  el('liveNet').textContent = money(r.net);
-  el('liveBreak').textContent = r.charges
-    ? money(r.gross) + ' gross less ' + money(r.charges) + ' charges  (' + (r.gross ? (r.charges/r.gross*100).toFixed(1) : '0') + '% taken)'
-    : (r.gross ? 'No charges on this entry' : '');
+  const r = readForm(), s = streamOf(state.cat);
+  el('calcLine').innerHTML = r.charges
+    ? '<div><div class="xs mut" style="font-weight:700">You keep</div><div class="keep">' + money(r.net) + '</div></div>' +
+      '<div style="margin-left:auto;text-align:right"><div class="xs mut" style="font-weight:700">Charges</div>' +
+      '<div class="chg">− ' + money(r.charges) + (r.gross ? ' · ' + (r.charges/r.gross*100).toFixed(0) + '%' : '') + '</div></div>'
+    : '<div><div class="xs mut" style="font-weight:700">You keep</div><div class="keep">' + money(r.net) + '</div></div>' +
+      (hasComm(s) && !r.gross ? '<div style="margin-left:auto" class="xs mut">' + s.commission + '% commission comes off automatically</div>' : '');
 }
 
 async function saveEntry(){
   const r = readForm();
-  if(!r.gross){ toast('Enter an amount first'); return; }
-  if(el('f_source') && el('f_source').value === '__new' && !r.source){ toast('Name the new source first'); return; }
+  if(!r.gross){ toast('Enter an amount first'); el('f_gross').focus(); return; }
+  if(el('f_source').value === '__new' && !r.source){ toast('Name the new source'); return; }
   addSource(r.category, r.source);
   const editing = state.editing;
   if(editing){
     const old = state.rows.filter(x => x.id === r.id)[0];
     r.inSheet = old ? !!old.inSheet : false;
     state.rows = state.rows.map(x => x.id === r.id ? r : x);
-    state.editing = null;
-    el('btnSave').textContent = 'Save entry';
-  } else {
-    state.rows.push(r);
-  }
+    state.editing = null; el('btnSave').textContent = 'Save entry';
+  } else state.rows.push(r);
   await persist();
-  buildForm(true);
-  if(el('f_source')) el('f_source').value = r.source;
+  const keepDate = el('f_date').value, keepSrc = r.source;
   renderAll();
-  toast('Saved ' + money(r.net) + ' net to ' + r.source);
+  el('f_date').value = keepDate;
+  el('f_source').value = keepSrc;
+  el('f_gross').focus();
+  toast('Saved ' + money(r.net) + ' · ' + r.source);
   if(state.settings.endpoint){
-    try{
-      await callSheet(editing ? 'update' : 'add', strip(r));
-      const t = state.rows.filter(x => x.id === r.id)[0];
-      if(t){ t.synced = true; t.inSheet = true; }
+    try{ await callSheet(editing ? 'update' : 'add', strip(r));
+      const t = state.rows.filter(x => x.id === r.id)[0]; if(t){ t.synced = true; t.inSheet = true; }
       await persist(); renderConn();
-    }catch(e){ toast('Saved here, sheet is offline'); renderConn(); }
+    }catch(e){ toast('Saved here · sheet offline'); renderConn(); }
   }
+}
+
+function entryHtml(r, withDate){
+  const c = colorOf(r.category);
+  return '<div class="entry">' +
+    '<div class="av" style="background:' + c + '">' + esc((r.source||'?').charAt(0).toUpperCase()) + '</div>' +
+    '<div class="who"><b>' + esc(r.source) + '</b><span>' + esc(r.category) + (r.ref ? ' · ' + esc(r.ref) : '') +
+      (withDate ? ' · ' + dayLabel(r.date) : '') + (r.synced ? '' : ' · not synced') + '</span></div>' +
+    '<div class="val"><b>' + money0(r.net) + '</b>' + (r.charges ? '<span>−' + fmt0(r.charges) + ' charges</span>' : '') + '</div>' +
+    '<div class="act"><button data-edit="' + r.id + '" title="Edit">✎</button><button data-del="' + r.id + '" title="Delete">✕</button></div></div>';
+}
+function wireEntries(box){
+  box.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => editRow(b.dataset.edit));
+  box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteRow(b.dataset.del));
+}
+
+function renderRecent(){
+  const rows = state.rows.slice().sort((a,b) => a.date<b.date?1:a.date>b.date?-1:0).slice(0,5);
+  el('recentCard').innerHTML = '<h2>Latest entries</h2>' + (rows.length
+    ? rows.map(r => entryHtml(r,true)).join('')
+    : '<div class="empty"><div class="big">✨</div>Nothing recorded yet. Type an amount above and hit save.</div>');
+  wireEntries(el('recentCard'));
+}
+
+function renderLedger(){
+  const msel = el('fMonth'), curM = msel.value || 'All';
+  msel.innerHTML = '<option>All</option>' + months().slice().reverse().map(m => '<option value="' + m + '">' + monthName(m) + '</option>').join('');
+  msel.value = curM;
+  const csel = el('fCat'), curC = csel.value || 'All', cats = allCats();
+  csel.innerHTML = '<option>All</option>' + cats.map(c => '<option>' + esc(c) + '</option>').join('');
+  csel.value = cats.indexOf(curC)===-1 ? 'All' : curC;
+  const ssel = el('fSrc'), curS = ssel.value || 'All';
+  const srcs = Array.from(new Set(state.rows.map(r => r.source).filter(Boolean))).sort();
+  ssel.innerHTML = '<option>All</option>' + srcs.map(x => '<option>' + esc(x) + '</option>').join('');
+  ssel.value = srcs.indexOf(curS)===-1 ? 'All' : curS;
+
+  const q = el('fText').value.toLowerCase();
+  const rows = state.rows.filter(r =>
+    (msel.value==='All' || monthOf(r.date)===msel.value) &&
+    (csel.value==='All' || r.category===csel.value) &&
+    (ssel.value==='All' || r.source===ssel.value) &&
+    (!q || (r.source+' '+r.ref+' '+r.note).toLowerCase().indexOf(q)!==-1)
+  ).sort((a,b) => a.date<b.date?1:a.date>b.date?-1:0);
+
+  const a = agg(rows);
+  el('ledgerSum').innerHTML =
+    '<div><div class="k">Net kept</div><div class="v up">' + money0(a.net) + '</div></div>' +
+    '<div><div class="k">Gross</div><div class="v">' + fmt0(a.gross) + '</div></div>' +
+    '<div><div class="k">Charges</div><div class="v down">' + fmt0(a.charges) + '</div></div>';
+
+  if(!rows.length){
+    el('ledgerList').innerHTML = '<div class="empty"><div class="big">🔍</div>No entries match these filters.</div>';
+    return;
+  }
+  let html = '', last = '';
+  rows.forEach(r => {
+    if(r.date !== last){
+      last = r.date;
+      const dayNet = rows.filter(x => x.date === r.date).reduce((s,x) => s+x.net, 0);
+      html += '<div class="dhead"><span>' + dayLabel(r.date) + '</span><span class="up">' + money0(dayNet) + '</span></div>';
+    }
+    html += entryHtml(r,false);
+  });
+  el('ledgerList').innerHTML = html;
+  wireEntries(el('ledgerList'));
 }
 
 function editRow(id){
-  const r = state.rows.filter(x => x.id === id)[0];
-  if(!r) return;
-  state.cat = r.category;
-  renderTabs();
-  buildForm();
-  state.editing = id;
+  const r = state.rows.filter(x => x.id === id)[0]; if(!r) return;
+  state.cat = r.category; state.editing = id;
+  renderPills(); renderForm();
   const s = streamOf(r.category);
   el('f_date').value = r.date;
-  el('f_ref').value = r.ref;
-  el('f_note').value = r.note;
+  el('dateChips').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.d === r.date));
   el('f_gross').value = r.gross;
-  if(el('f_source')) el('f_source').value = r.source;
-  if(el('f_tips')) el('f_tips').value = '';
-  if(hasComm(s)){
-    el('f_commAmt').value = r.charges;
-    el('f_commPct').value = r.gross ? (r.charges/r.gross*100).toFixed(2) : '';
-    el('f_other').value = '';
-  } else {
-    el('f_other').value = r.charges;
-  }
+  if(el('f_source').querySelector('option[value="' + r.source.replace(/"/g,'') + '"]') || true) el('f_source').value = r.source;
+  el('f_ref').value = r.ref; el('f_note').value = r.note;
+  if(hasComm(s)){ el('f_commAmt').value = r.charges; el('f_commPct').value = r.gross ? (r.charges/r.gross*100).toFixed(2) : ''; }
+  else el('f_other').value = r.charges;
   el('btnSave').textContent = 'Update entry';
-  showTab('record');
-  live();
+  showTab('add'); live();
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 async function deleteRow(id){
-  if(!confirm('Delete this entry?')) return;
   const r = state.rows.filter(x => x.id === id)[0];
+  if(!confirm('Delete this entry?')) return;
   state.rows = state.rows.filter(x => x.id !== id);
-  await persist();
-  renderAll();
-  if(state.settings.endpoint && r && r.inSheet){
-    try{ await callSheet('delete', {id}); }catch(e){ toast('Deleted here, sheet is offline'); }
-  }
+  await persist(); renderAll();
+  if(state.settings.endpoint && r && r.inSheet){ try{ await callSheet('delete', {id}); }catch(e){ toast('Deleted here · sheet offline'); } }
 }
 
-/* ---------- stream manager ---------- */
-function fld(i, k, label, val, cls){
-  return '<div><label for="st_' + i + '_' + k + '">' + label + '</label>' +
-    '<input id="st_' + i + '_' + k + '" class="' + (cls||'') + '" value="' + esc(val==null?'':val) + '"></div>';
-}
-
-function renderStreams(){
-  const box = el('streamList');
-  box.innerHTML = streams().map((s,i) => {
+/* ---------- streams ---------- */
+function fld(i,k,l,v,cls){ return '<div><label for="st_'+i+'_'+k+'">'+l+'</label><input id="st_'+i+'_'+k+'" class="'+(cls||'')+'" value="'+esc(v==null?'':v)+'"></div>'; }
+function renderStreamList(){
+  el('streamList').innerHTML = streams().map((s,i) => {
     const rows = state.rows.filter(r => r.category === s.name);
-    const net = rows.reduce((a,r) => a + r.net, 0);
-    const bits = [rows.length + ' entries', money(net) + ' net'];
-    if(hasComm(s)) bits.push(s.commission + '% commission');
-    return '<details class="stream"><summary><b>' + esc(s.name) + '</b> <span class="muted small">' + bits.join(', ') + '</span></summary>' +
-      '<div class="grid" style="margin:14px 0">' +
-        fld(i,'name','Stream name',s.name) +
-        fld(i,'dateLabel','Date field label',s.dateLabel) +
-        fld(i,'amountLabel','Amount field label',s.amountLabel) +
-        fld(i,'deductionLabel','Deduction field label',s.deductionLabel) +
-        fld(i,'commission','Commission %, blank for none',s.commission,'num') +
-        fld(i,'refPrefix','Auto reference prefix, blank for free text',s.refPrefix) +
-        fld(i,'refLabel','Reference field label',s.refLabel) +
-        fld(i,'unit','Word for one entry',s.unit) +
-        '<div><label for="st_' + i + '_tips">Tips or bonus field</label><select id="st_' + i + '_tips">' +
-        '<option value="no">Not needed</option><option value="yes">Show it</option></select></div>' +
+    const net = rows.reduce((a,r) => a+r.net, 0);
+    return '<details class="st"><summary><span class="av" style="width:30px;height:30px;border-radius:10px;background:'+s.color+'">'+esc(s.name.charAt(0))+'</span>' +
+      '<span style="flex:1">'+esc(s.name)+'<span class="sm mut" style="font-weight:600"> · '+rows.length+' entries · '+money0(net)+'</span></span></summary>' +
+      '<div class="row" style="margin:16px 0 6px">' +
+        fld(i,'name','Stream name',s.name) + fld(i,'amountLabel','Amount label',s.amountLabel) +
+        fld(i,'deductionLabel','Deduction label',s.deductionLabel) + fld(i,'commission','Commission %, blank for none',s.commission,'num') +
+        fld(i,'dateLabel','Date label',s.dateLabel) + fld(i,'refLabel','Reference label',s.refLabel) +
+        fld(i,'refPrefix','Auto reference prefix',s.refPrefix) + fld(i,'unit','Word for one entry',s.unit) +
+        '<div><label for="st_'+i+'_tips">Tips or bonus field</label><select id="st_'+i+'_tips"><option value="no">Not needed</option><option value="yes">Show it</option></select></div>' +
       '</div>' +
-      '<div class="lbl">Sources inside this stream</div><div class="chips">' +
-      sourcesFor(s.name).map(x => {
-        const used = state.rows.filter(r => r.category === s.name && r.source === x).length;
-        return used
-          ? '<span class="chip locked">' + esc(x) + ' <span class="muted small">' + used + '</span></span>'
-          : '<span class="chip">' + esc(x) + '<button data-rmsrc="' + esc(x) + '" data-i="' + i + '" aria-label="Remove">&times;</button></span>';
+      '<label style="margin-top:12px">Colour</label><div class="sw">' + PALETTE.map(c =>
+        '<button data-col="'+c+'" data-i="'+i+'" class="'+(c.toLowerCase()===String(s.color).toLowerCase()?'on':'')+'" style="background:'+c+'" aria-label="'+c+'"></button>').join('') + '</div>' +
+      '<label style="margin-top:16px">Sources</label><div class="tags">' + sourcesFor(s.name).map(x => {
+        const used = state.rows.filter(r => r.category===s.name && r.source===x).length;
+        return used ? '<span class="tag lk">'+esc(x)+' · '+used+'</span>'
+                    : '<span class="tag">'+esc(x)+'<button data-rmsrc="'+esc(x)+'" data-i="'+i+'">×</button></span>';
       }).join('') + '</div>' +
-      '<div class="addsrc">' +
-        '<div style="flex:1"><input id="st_' + i + '_newsrc" placeholder="Add a source under ' + esc(s.name) + '"></div>' +
-        '<button class="ghost" data-addsrc="' + i + '">Add source</button>' +
-        '<button class="ghost" data-delstream="' + i + '">Delete stream</button>' +
-        '<button class="go" data-savestream="' + i + '">Save stream</button>' +
-      '</div></details>';
+      '<div class="row"><div><input id="st_'+i+'_newsrc" placeholder="Add a source"></div></div>' +
+      '<div class="chipset" style="margin-top:14px">' +
+        '<button class="btn ghost sm" data-addsrc="'+i+'">Add source</button>' +
+        '<button class="btn ghost sm" data-delstream="'+i+'">Delete stream</button>' +
+        '<button class="btn sm" data-savestream="'+i+'">Save stream</button></div></details>';
   }).join('');
-
-  streams().forEach((s,i) => { const t = el('st_' + i + '_tips'); if(t) t.value = s.tips ? 'yes' : 'no'; });
-  box.querySelectorAll('[data-savestream]').forEach(b => b.onclick = () => saveStream(Number(b.dataset.savestream)));
-  box.querySelectorAll('[data-delstream]').forEach(b => b.onclick = () => deleteStream(Number(b.dataset.delstream)));
-  box.querySelectorAll('[data-addsrc]').forEach(b => b.onclick = async () => {
-    const i = Number(b.dataset.addsrc), nm = el('st_' + i + '_newsrc').value.trim();
-    if(!nm){ toast('Type a source name first'); return; }
-    addSource(streams()[i].name, nm);
-    await persist(); buildForm(true); renderStreams();
-    toast('Added ' + nm);
+  streams().forEach((s,i) => { const t = el('st_'+i+'_tips'); if(t) t.value = s.tips ? 'yes' : 'no'; });
+  const b = el('streamList');
+  b.querySelectorAll('[data-col]').forEach(x => x.onclick = async () => {
+    streams()[Number(x.dataset.i)].color = x.dataset.col; await persist(); renderAll();
   });
-  box.querySelectorAll('[data-rmsrc]').forEach(b => b.onclick = async () => {
-    const i = Number(b.dataset.i);
-    streams()[i].sources = streams()[i].sources.filter(x => x !== b.dataset.rmsrc);
-    await persist(); buildForm(true); renderStreams();
+  b.querySelectorAll('[data-savestream]').forEach(x => x.onclick = () => saveStream(Number(x.dataset.savestream)));
+  b.querySelectorAll('[data-delstream]').forEach(x => x.onclick = () => deleteStream(Number(x.dataset.delstream)));
+  b.querySelectorAll('[data-addsrc]').forEach(x => x.onclick = async () => {
+    const i = Number(x.dataset.addsrc), nm = el('st_'+i+'_newsrc').value.trim();
+    if(!nm){ toast('Type a source name'); return; }
+    addSource(streams()[i].name, nm); await persist(); renderAll(); toast('Added ' + nm);
+  });
+  b.querySelectorAll('[data-rmsrc]').forEach(x => x.onclick = async () => {
+    const i = Number(x.dataset.i);
+    streams()[i].sources = streams()[i].sources.filter(v => v !== x.dataset.rmsrc);
+    await persist(); renderAll();
   });
 }
 
 async function saveStream(i){
-  const s = streams()[i];
-  const get = k => { const x = el('st_' + i + '_' + k); return x ? x.value.trim() : ''; };
-  const newName = get('name') || s.name;
-  const clash = streams().some((x,j) => j !== i && x.name === newName);
-  if(clash){ toast('Another stream already uses that name'); return; }
-  const oldName = s.name;
-  s.name = newName;
-  s.dateLabel = get('dateLabel') || 'Date';
-  s.amountLabel = get('amountLabel') || 'Amount';
-  s.deductionLabel = get('deductionLabel') || 'Deductions';
-  s.commission = get('commission') === '' ? '' : n(get('commission'));
-  s.refPrefix = get('refPrefix');
-  s.refLabel = get('refLabel') || 'Reference';
-  s.unit = get('unit') || 'entry';
-  s.tips = el('st_' + i + '_tips').value === 'yes';
-
+  const s = streams(), t = s[i];
+  const get = k => { const x = el('st_'+i+'_'+k); return x ? x.value.trim() : ''; };
+  const newName = get('name') || t.name;
+  if(s.some((x,j) => j!==i && x.name===newName)){ toast('That name is taken'); return; }
+  const oldName = t.name;
+  t.name = newName;
+  t.amountLabel = get('amountLabel')||'Amount'; t.deductionLabel = get('deductionLabel')||'Deductions';
+  t.dateLabel = get('dateLabel')||'Date'; t.refLabel = get('refLabel')||'Reference';
+  t.commission = get('commission')==='' ? '' : n(get('commission'));
+  t.refPrefix = get('refPrefix'); t.unit = get('unit')||'entry';
+  t.tips = el('st_'+i+'_tips').value === 'yes';
   let moved = 0;
   if(oldName !== newName){
-    state.rows.forEach(r => {
-      if(r.category === oldName){ r.category = newName; r.synced = false; moved++; }
-      if(r.source === oldName) r.source = newName;
-    });
-    s.sources = s.sources.map(x => x === oldName ? newName : x);
+    state.rows.forEach(r => { if(r.category===oldName){ r.category = newName; r.synced = false; moved++; } if(r.source===oldName) r.source = newName; });
+    t.sources = t.sources.map(x => x===oldName ? newName : x);
     if(state.cat === oldName) state.cat = newName;
   }
-  await persist();
-  renderTabs(); buildForm(true); renderAll();
-  toast(moved ? 'Renamed, ' + moved + ' entries moved across' : 'Stream saved');
-  if(moved && state.settings.endpoint){ try{ await pushUnsynced(); }catch(e){ toast('Renamed here, push when the sheet is reachable'); } }
+  await persist(); renderAll();
+  toast(moved ? 'Renamed · ' + moved + ' entries moved' : 'Stream saved');
+  if(moved && state.settings.endpoint){ try{ await pushUnsynced(); }catch(e){} }
 }
-
 async function deleteStream(i){
-  const s = streams()[i];
-  const count = state.rows.filter(r => r.category === s.name).length;
-  if(count){ toast('Cannot delete, ' + count + ' entries use it. Rename it instead.'); return; }
+  const s = streams()[i], c = state.rows.filter(r => r.category === s.name).length;
+  if(c){ toast('Cannot delete · ' + c + ' entries use it'); return; }
   if(streams().length === 1){ toast('Keep at least one stream'); return; }
   if(!confirm('Delete the ' + s.name + ' stream?')) return;
   streams().splice(i,1);
   if(state.cat === s.name) state.cat = streams()[0].name;
-  await persist();
-  renderTabs(); buildForm(); renderAll();
+  await persist(); renderAll();
 }
 
-async function addStream(){
-  const nm = el('newStreamName').value.trim();
-  if(!nm){ toast('Name the stream first'); return; }
-  if(streams().some(s => s.name === nm)){ toast('That stream already exists'); return; }
-  streams().push(Object.assign(BLANK(), {name:nm}));
-  el('newStreamName').value = '';
-  state.cat = nm;
-  await persist();
-  renderTabs(); buildForm(); renderAll();
-  toast('Added ' + nm + '. Open it below to set its fields.');
-}
-
-/* ---------- aggregation ---------- */
-function months(){
-  const s = new Set(state.rows.map(r => monthOf(r.date)));
-  s.add(monthOf(today()));
-  return Array.from(s).sort();
-}
-function agg(rows){
-  return rows.reduce((a,r) => {
-    a.gross += r.gross; a.charges += r.charges; a.net += r.net; a.count++;
-    a.by[r.category] = (a.by[r.category]||0) + r.net;
-    return a;
-  }, {gross:0, charges:0, net:0, count:0, by:{}});
-}
-const byMonth = m => state.rows.filter(r => monthOf(r.date) === m);
-
-/* ---------- rendering ---------- */
-function renderAll(){ renderHero(); renderLedger(); renderTrends(); renderStreams(); renderConn(); }
-
-function renderConn(){
-  const on = !!state.settings.endpoint;
-  const pending = state.rows.filter(r => !r.synced).length;
-  el('connDot').className = 'dot' + (on && !pending ? ' on' : '');
-  el('connText').textContent = !on ? 'Sheet not connected' : (pending ? pending + ' waiting to sync' : 'Sheet connected');
-  el('syncInfo').textContent = state.rows.length + ' entries stored, ' + pending + ' not yet in the sheet.';
-}
-
-function renderHero(){
-  const m = monthOf(today());
-  const rows = byMonth(m);
-  const a = agg(rows);
-  el('heroMonthLbl').textContent = monthName(m) + ', after charges';
-  el('heroNet').textContent = money(a.net);
-  el('heroGross').textContent = money(a.gross);
-  el('heroCharges').textContent = money(a.charges);
-  el('heroCount').textContent = a.count;
-  const top = Object.keys(a.by).sort((x,y) => a.by[y]-a.by[x])[0];
-  el('heroTop').textContent = top ? top : '—';
-  el('periodLabel').textContent = state.rows.length ? state.rows.length + ' entries on record' : 'Start by recording an entry';
-
-  const ms = months().slice(-6);
-  const vals = ms.map(x => agg(byMonth(x)).net);
-  const max = Math.max.apply(null, vals.concat([1]));
-  el('spark').innerHTML = ms.map((x,i) =>
-    '<div style="height:' + Math.max(2, vals[i]/max*56) + 'px" title="' + monthName(x) + ': ' + money(vals[i]) + '"></div>').join('');
-}
-
-function allCategories(){
-  const set = new Set(streams().map(s => s.name));
-  state.rows.forEach(r => set.add(r.category));
-  return Array.from(set);
-}
-
-function renderLedger(){
-  const sel = el('fMonth'), curM = sel.value || 'All';
-  sel.innerHTML = '<option>All</option>' + months().slice().reverse().map(m => '<option value="' + m + '">' + monthName(m) + '</option>').join('');
-  sel.value = curM;
-
-  const csel = el('fCat'), curC = csel.value || 'All';
-  const cats = allCategories();
-  csel.innerHTML = '<option>All</option>' + cats.map(c => '<option>' + esc(c) + '</option>').join('');
-  csel.value = cats.indexOf(curC) === -1 ? 'All' : curC;
-
-  const ssel = el('fSrc'), curS = ssel.value || 'All';
-  const allSrc = Array.from(new Set(state.rows.map(r => r.source).filter(Boolean))).sort();
-  ssel.innerHTML = '<option>All</option>' + allSrc.map(x => '<option>' + esc(x) + '</option>').join('');
-  ssel.value = allSrc.indexOf(curS) === -1 ? 'All' : curS;
-
-  const q = el('fText').value.toLowerCase();
-  const rows = state.rows.filter(r =>
-      (sel.value === 'All' || monthOf(r.date) === sel.value) &&
-      (csel.value === 'All' || r.category === csel.value) &&
-      (ssel.value === 'All' || r.source === ssel.value) &&
-      (!q || (r.source + ' ' + r.ref + ' ' + r.note).toLowerCase().indexOf(q) !== -1)
-    ).sort((a,b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
-
-  const tb = el('ledgerTbl').querySelector('tbody');
-  tb.innerHTML = rows.map(r =>
-    '<tr><td>' + r.date + '</td>' +
-    '<td><span class="tag">' + esc(r.category) + '</span></td>' +
-    '<td>' + esc(r.source) + '</td><td class="muted small">' + esc(r.ref) + '</td>' +
-    '<td class="num">' + fmt(r.gross) + '</td>' +
-    '<td class="num loss">' + (r.charges ? '-' + fmt(r.charges) : '') + '</td>' +
-    '<td class="num gain">' + fmt(r.net) + '</td>' +
-    '<td class="muted small">' + esc(r.note) + (r.synced ? '' : ' <span class="tag">local</span>') + '</td>' +
-    '<td class="num"><button class="rowbtn" data-edit="' + r.id + '">edit</button>' +
-    '<button class="rowbtn" data-del="' + r.id + '">delete</button></td></tr>').join('');
-
-  const a = agg(rows);
-  el('ledgerTbl').querySelector('tfoot').innerHTML = rows.length ?
-    '<tr><td colspan="4">' + rows.length + ' entries</td><td class="num">' + fmt(a.gross) + '</td>' +
-    '<td class="num loss">-' + fmt(a.charges) + '</td><td class="num gain">' + fmt(a.net) + '</td><td colspan="2"></td></tr>' : '';
-  el('ledgerEmpty').hidden = rows.length > 0;
-
-  tb.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => editRow(b.dataset.edit));
-  tb.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteRow(b.dataset.del));
-}
-
+/* ---------- trends ---------- */
 function renderTrends(){
-  const ms = months().slice(-12);
+  const ms = months().slice(-state.range);
   const data = ms.map(m => { const a = agg(byMonth(m)); a.m = m; return a; });
-  el('chartMonthly').innerHTML = monthlyChart(data);
+  el('chartMonthly').innerHTML = barChart(data);
 
-  const ysel = el('fYear');
+  const ysel = el('yearTabs');
   const years = Array.from(new Set(state.rows.map(r => r.date.slice(0,4)))).sort().reverse();
-  const cury = ysel.value || (years[0] || String(new Date().getFullYear()));
-  ysel.innerHTML = '<option>All time</option>' + years.map(y => '<option>' + y + '</option>').join('');
-  ysel.value = cury;
-  const sub = state.rows.filter(r => ysel.value === 'All time' || r.date.slice(0,4) === ysel.value);
-  el('chartCat').innerHTML = catChart(sub);
+  const opts = ['All time'].concat(years);
+  if(!ysel.dataset.v || opts.indexOf(ysel.dataset.v) === -1) ysel.dataset.v = opts[0];
+  ysel.innerHTML = opts.map(y => '<button data-y="'+y+'"'+(y===ysel.dataset.v?' class="on"':'')+'>'+y+'</button>').join('');
+  ysel.querySelectorAll('button').forEach(b => b.onclick = () => { ysel.dataset.v = b.dataset.y; renderTrends(); });
+  const sub = state.rows.filter(r => ysel.dataset.v === 'All time' || r.date.slice(0,4) === ysel.dataset.v);
+  el('splitChart').innerHTML = splitChart(sub);
 
-  const cats = allCategories();
-  el('monthTbl').querySelector('thead').innerHTML = '<tr><th>Month</th>' +
-    cats.map(c => '<th class="num">' + esc(c) + '</th>').join('') +
-    '<th class="num">Gross</th><th class="num">Charges</th><th class="num">Net</th></tr>';
-  el('monthTbl').querySelector('tbody').innerHTML = data.slice().reverse().map(d =>
-    '<tr><td>' + monthName(d.m) + '</td>' +
-    cats.map(c => '<td class="num">' + fmt(d.by[c]||0) + '</td>').join('') +
-    '<td class="num">' + fmt(d.gross) + '</td><td class="num loss">' + fmt(d.charges) + '</td>' +
-    '<td class="num gain">' + fmt(d.net) + '</td></tr>').join('');
-  const tot = agg(state.rows);
-  const active = data.filter(d => d.count).length || 1;
-  el('monthTbl').querySelector('tfoot').innerHTML =
-    '<tr><td>Average per active month</td>' +
-    cats.map(c => '<td class="num">' + fmt((tot.by[c]||0)/active) + '</td>').join('') +
-    '<td class="num">' + fmt(tot.gross/active) + '</td><td class="num loss">' + fmt(tot.charges/active) +
-    '</td><td class="num gain">' + fmt(tot.net/active) + '</td></tr>';
-
-  const dsel = el('fStream'), curD = dsel.value || cats[0];
-  dsel.innerHTML = cats.map(c => '<option>' + esc(c) + '</option>').join('');
-  dsel.value = cats.indexOf(curD) === -1 ? cats[0] : curD;
-  const s = streamOf(dsel.value);
-  const rows = state.rows.filter(r => r.category === dsel.value);
-  const a = agg(rows);
-  const unit = s.unit || 'entry';
+  const cats = allCats();
+  const dp = el('detailPills');
+  if(!dp.dataset.v || cats.indexOf(dp.dataset.v) === -1) dp.dataset.v = cats[0] || '';
+  dp.innerHTML = cats.map(c => '<button class="pill'+(c===dp.dataset.v?' on':'')+'" data-d="'+esc(c)+'" style="'+(c===dp.dataset.v?'background:'+colorOf(c)+';':'color:'+colorOf(c)+';')+'"><span class="d"></span>'+esc(c)+'</button>').join('');
+  dp.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { dp.dataset.v = b.dataset.d; renderTrends(); });
+  const s = streamOf(dp.dataset.v), a = agg(state.rows.filter(r => r.category === dp.dataset.v)), u = s.unit || 'entry';
   el('streamStats').innerHTML = [
-    [(unit.charAt(0).toUpperCase() + unit.slice(1)) + 's recorded', a.count],
-    ['Gross received', money(a.gross)],
-    ['Charges deducted', money(a.charges)],
-    ['Kept after charges', money(a.net)],
-    ['Average net per ' + unit, money(a.count ? a.net/a.count : 0)],
-    ['Effective charge rate', (a.gross ? (a.charges/a.gross*100).toFixed(1) : '0') + '%']
-  ].map(p => '<div><div class="lbl">' + p[0] + '</div><div style="font-size:18px">' + p[1] + '</div></div>').join('');
+    [u.charAt(0).toUpperCase()+u.slice(1)+'s', a.count],
+    ['Gross', money0(a.gross)], ['Charges', money0(a.charges)], ['Kept', money0(a.net)],
+    ['Average per '+u, money0(a.count ? a.net/a.count : 0)],
+    ['Charge rate', (a.gross ? (a.charges/a.gross*100).toFixed(1) : '0') + '%']
+  ].map(p => '<div><div class="k">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>').join('');
+
+  const th = el('monthTbl').querySelector('thead');
+  th.innerHTML = '<tr><th>Month</th>' + cats.map(c => '<th class="num">'+esc(c)+'</th>').join('') + '<th class="num">Charges</th><th class="num">Net</th></tr>';
+  el('monthTbl').querySelector('tbody').innerHTML = data.slice().reverse().map(d =>
+    '<tr><td>'+monthName(d.m)+'</td>' + cats.map(c => '<td class="num">'+fmt0(d.by[c]||0)+'</td>').join('') +
+    '<td class="num down">'+fmt0(d.charges)+'</td><td class="num up" style="font-weight:700">'+fmt0(d.net)+'</td></tr>').join('');
+  const tot = agg(state.rows), act = data.filter(d => d.count).length || 1;
+  el('monthTbl').querySelector('tfoot').innerHTML = '<tr><td>Average</td>' +
+    cats.map(c => '<td class="num">'+fmt0((tot.by[c]||0)/act)+'</td>').join('') +
+    '<td class="num down">'+fmt0(tot.charges/act)+'</td><td class="num up">'+fmt0(tot.net/act)+'</td></tr>';
 }
 
-function monthlyChart(data){
-  if(!data.length) return '<div class="empty">Nothing to chart yet.</div>';
-  const W = 820, H = 260, L = 58, R = 12, T = 16, B = 34;
+const cssVar = k => getComputedStyle(document.body).getPropertyValue(k).trim() || '#888';
+
+function barChart(data){
+  if(!data.length || !data.some(d => d.count)) return '<div class="empty"><div class="big">📊</div>Record a few entries and the trend appears here.</div>';
+  const W=820, H=250, L=6, R=6, T=26, B=30;
   const max = Math.max.apply(null, data.map(d => d.gross).concat([1]));
-  const step = (W - L - R) / data.length;
-  const bw = Math.min(46, step * 0.6);
-  const y = v => T + (H - T - B) * (1 - v/max);
-  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img">';
-  for(let i=0;i<=4;i++){
-    const v = max*i/4, yy = y(v);
-    s += '<line x1="' + L + '" x2="' + (W-R) + '" y1="' + yy + '" y2="' + yy + '" stroke="#CBD4D2" stroke-width="1"/>' +
-         '<text x="' + (L-8) + '" y="' + (yy+4) + '" text-anchor="end">' + Math.round(v).toLocaleString('en-US') + '</text>';
-  }
+  const step = (W-L-R)/data.length, bw = Math.min(52, step*0.56);
+  const y = v => T + (H-T-B)*(1 - v/max);
+  const up = cssVar('--up'), dn = cssVar('--down'), tx = cssVar('--tx-2');
+  let s = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">';
   data.forEach((d,i) => {
-    const x = L + step*i + (step-bw)/2;
-    const yn = y(d.net), yg = y(d.gross);
-    s += '<rect x="' + x + '" y="' + yg + '" width="' + bw + '" height="' + Math.max(0,yn-yg) + '" fill="#9B3B42" opacity="0.35"/>';
-    s += '<rect x="' + x + '" y="' + yn + '" width="' + bw + '" height="' + Math.max(0,(H-B)-yn) + '" fill="#1D6F5C"/>';
-    s += '<title>' + monthName(d.m) + ': net ' + fmt(d.net) + ', charges ' + fmt(d.charges) + '</title>';
-    s += '<text x="' + (x+bw/2) + '" y="' + (H-B+16) + '" text-anchor="middle">' + monthName(d.m).replace(' ','\u00a0') + '</text>';
+    const x = L + step*i + (step-bw)/2, yn = y(d.net), yg = y(d.gross), base = H-B;
+    if(d.gross > d.net) s += '<rect x="'+x+'" y="'+yg+'" width="'+bw+'" height="'+Math.max(3,yn-yg)+'" rx="6" fill="'+dn+'" opacity="0.45"/>';
+    s += '<rect x="'+x+'" y="'+yn+'" width="'+bw+'" height="'+Math.max(3,base-yn)+'" rx="6" fill="'+up+'"><title>'+monthName(d.m)+': net '+fmt0(d.net)+', charges '+fmt0(d.charges)+'</title></rect>';
+    if(d.net) s += '<text x="'+(x+bw/2)+'" y="'+(yg-9)+'" text-anchor="middle" fill="'+tx+'">'+fmt0(d.net)+'</text>';
+    s += '<text x="'+(x+bw/2)+'" y="'+(H-9)+'" text-anchor="middle">'+monthShort(d.m)+'</text>';
   });
-  s += '<line x1="' + L + '" x2="' + (W-R) + '" y1="' + (H-B) + '" y2="' + (H-B) + '" stroke="#12242E" stroke-width="1.5"/></svg>';
+  s += '</svg><div class="sm mut" style="margin-top:10px"><span style="color:'+up+';font-weight:700">■</span> kept &nbsp; <span style="color:'+dn+';font-weight:700;opacity:.6">■</span> charges on top</div>';
   return s;
 }
 
-function catChart(rows){
-  const groups = {};
-  rows.forEach(r => {
-    const key = (r.source && r.source !== r.category) ? r.category + ' · ' + r.source : (r.source || r.category);
-    groups[key] = (groups[key]||0) + r.net;
-  });
-  const list = Object.keys(groups).map(k => [k, groups[k]]).sort((a,b) => b[1]-a[1]).slice(0,12);
-  if(!list.length) return '<div class="empty">Nothing in this period.</div>';
-  const max = Math.max.apply(null, list.map(x => x[1]).concat([1]));
-  const total = list.reduce((s,x) => s+x[1], 0);
-  return '<table><tbody>' + list.map(x =>
-    '<tr><td style="width:190px">' + esc(x[0]) + '</td>' +
-    '<td><div style="background:#1D6F5C;height:12px;border-radius:2px;width:' + Math.max(1, x[1]/max*100) + '%"></div></td>' +
-    '<td class="num" style="width:130px">' + fmt(x[1]) + '</td>' +
-    '<td class="num muted small" style="width:60px">' + (total ? (x[1]/total*100).toFixed(0) : 0) + '%</td></tr>').join('') +
-    '</tbody></table>';
+function splitChart(rows){
+  const g = {};
+  rows.forEach(r => { const k = r.category + '||' + r.source; g[k] = (g[k]||0) + r.net; });
+  const list = Object.keys(g).map(k => ({cat:k.split('||')[0], src:k.split('||')[1], v:g[k]}))
+    .filter(x => x.v > 0).sort((a,b) => b.v-a.v).slice(0,10);
+  if(!list.length) return '<div class="empty"><div class="big">🍰</div>Nothing in this period yet.</div>';
+  const total = list.reduce((s,x) => s+x.v, 0);
+  return '<div class="stack">' + list.map(x => '<i style="flex:'+x.v+';background:'+colorOf(x.cat)+'" title="'+esc(x.src)+'"></i>').join('') + '</div>' +
+    '<div class="legend">' + list.map(x =>
+      '<div class="lg"><span class="d" style="background:'+colorOf(x.cat)+'"></span>' +
+      '<span class="n">'+esc(x.src)+(x.src!==x.cat?' <span class="mut sm">'+esc(x.cat)+'</span>':'')+'</span>' +
+      '<span class="p">'+(x.v/total*100).toFixed(0)+'%</span><span class="v">'+money0(x.v)+'</span></div>').join('') + '</div>';
 }
 
-/* ---------- csv ---------- */
+/* ---------- csv + tabs ---------- */
 function csv(){
   const head = ['ID','Date','Month','Category','Source','Reference','Gross','Charges','Net','Note'];
   const lines = [head.join(',')].concat(state.rows.map(r =>
-    [r.id, r.date, monthOf(r.date), r.category, r.source, r.ref, r.gross, r.charges, r.net, r.note]
-      .map(v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"').join(',')));
-  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+    [r.id,r.date,monthOf(r.date),r.category,r.source,r.ref,r.gross,r.charges,r.net,r.note]
+    .map(v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')));
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'income-ledger.csv';
-  a.click();
+  a.href = URL.createObjectURL(new Blob([lines.join('\n')], {type:'text/csv'}));
+  a.download = 'income.csv'; a.click();
 }
-
-/* ---------- tabs and wiring ---------- */
 function showTab(t){
-  ['record','ledger','trends','setup'].forEach(x => el('tab-' + x).hidden = (x !== t));
-  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  ['add','ledger','trends','setup'].forEach(x => el('view-'+x).hidden = (x!==t));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab===t));
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
 el('btnSave').onclick = saveEntry;
-el('btnReset').onclick = () => { state.editing = null; el('btnSave').textContent = 'Save entry'; buildForm(); };
-el('btnAddStream').onclick = addStream;
-el('fMonth').onchange = renderLedger;
-el('fCat').onchange = renderLedger;
-el('fSrc').onchange = renderLedger;
+el('btnAddStream').onclick = async () => {
+  const nm = el('newStreamName').value.trim();
+  if(!nm){ toast('Name the stream first'); return; }
+  if(streams().some(s => s.name === nm)){ toast('That stream exists'); return; }
+  streams().push(Object.assign(BLANK(), {name:nm, color:PALETTE[streams().length % PALETTE.length]}));
+  el('newStreamName').value = ''; state.cat = nm;
+  await persist(); renderAll(); toast('Added ' + nm);
+};
+['fMonth','fCat','fSrc'].forEach(id => el(id).onchange = renderLedger);
 el('fText').oninput = renderLedger;
-el('fYear').onchange = renderTrends;
-el('fStream').onchange = renderTrends;
 el('btnCsv').onclick = csv;
-el('connPill').onclick = () => showTab('setup');
+el('rangeTabs').querySelectorAll('button').forEach(b => b.onclick = () => {
+  state.range = Number(b.dataset.r);
+  el('rangeTabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x===b));
+  renderTrends();
+});
+el('connBtn').onclick = () => showTab('setup');
+el('themeBtn').onclick = async () => {
+  state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(); renderTrends(); await persist();
+};
+el('setCurSel').onchange = () => {
+  const pick = CURRENCIES.filter(x => x.c === el('setCurSel').value)[0];
+  el('curCustom').hidden = el('setCurSel').value !== 'CUSTOM';
+  if(pick && pick.s) el('setCur').value = pick.s;
+  else el('setCur').focus();
+};
 el('btnSaveSet').onclick = async () => {
   state.settings.endpoint = el('epUrl').value.trim();
+  state.settings.currencyCode = el('setCurSel').value;
   state.settings.currency = el('setCur').value.trim() || 'Rs';
+  applyCurrency();
+  state.settings.appName = el('setName').value.trim() || 'Income';
+  el('brandName').textContent = state.settings.appName;
   await persist(); renderAll();
-  if(state.settings.endpoint){ try{ await pull(); }catch(e){ toast('Saved, but the sheet did not answer: ' + e.message); } }
-  else toast('Settings saved');
+  if(state.settings.endpoint){
+    try{ await pull(); if(state.rows.some(r => !r.synced)) await pushUnsynced(); }
+    catch(e){ toast('Saved · sheet did not answer'); }
+  } else toast('Settings saved');
 };
 el('btnPull').onclick = () => pull().catch(e => toast(e.message));
 el('btnPush').onclick = () => pushUnsynced().catch(e => toast(e.message));
-el('btnCopyCode').onclick = () => {
-  navigator.clipboard.writeText(el('gsCode').textContent).then(() => toast('Code copied'), () => toast('Select the code and copy it manually'));
-};
+el('btnCopyCode').onclick = () => navigator.clipboard.writeText(el('gsCode').textContent)
+  .then(() => toast('Code copied'), () => toast('Select and copy manually'));
 
 boot();
 </script>
