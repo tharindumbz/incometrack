@@ -1,0 +1,1031 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Income ledger</title>
+<style>
+  :root{
+    --ink:#12242E;
+    --ink-soft:#4A5F68;
+    --paper:#F1F3F2;
+    --card:#FFFFFF;
+    --rule:#CBD4D2;
+    --gain:#1D6F5C;
+    --loss:#9B3B42;
+    --brass:#B08A2E;
+    --radius:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    font-variant-numeric:tabular-nums;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 18px 80px}
+  h1,h2,h3{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-weight:600;margin:0}
+  h1{font-size:24px;letter-spacing:-.01em}
+  h2{font-size:19px;margin-bottom:10px}
+  h3{font-size:15px;margin-bottom:6px}
+  .muted{color:var(--ink-soft)}
+  .small{font-size:13px}
+  .num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .gain{color:var(--gain)}
+  .loss{color:var(--loss)}
+
+  header.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  header.top .sub{color:var(--ink-soft);font-size:13px}
+  .pill{margin-left:auto;font-size:12px;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;background:var(--card);cursor:pointer}
+  .pill b{font-weight:600}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--loss);margin-right:6px;vertical-align:1px}
+  .dot.on{background:var(--gain)}
+
+  /* hero ledger strip */
+  .hero{background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end}
+  .hero .big{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-size:40px;line-height:1;color:var(--gain);letter-spacing:-.02em}
+  .hero .lbl{font-size:12px;color:var(--ink-soft);margin-bottom:4px}
+  .hero .col{min-width:100px}
+  .hero .col .v{font-size:17px;font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif}
+  .spark{margin-left:auto;display:flex;align-items:flex-end;gap:5px;height:56px}
+  .spark div{width:16px;background:var(--gain);opacity:.75;border-radius:2px 2px 0 0;min-height:2px}
+  .spark div:last-child{opacity:1}
+
+  nav{display:flex;gap:2px;margin:18px 0 14px;border-bottom:1px solid var(--rule)}
+  nav button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;font:inherit;font-size:14px;color:var(--ink-soft);cursor:pointer;margin-bottom:-1px}
+  nav button.on{color:var(--ink);border-bottom-color:var(--brass);font-weight:600}
+  nav button:focus-visible,.pill:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+  .panel{background:var(--card);border:1px solid var(--rule);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px}
+  .seg{display:inline-flex;border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+  .seg button{background:var(--card);border:0;border-right:1px solid var(--rule);padding:8px 16px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink-soft)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:var(--ink);color:#fff}
+
+  .pickrow{display:flex;gap:6px}
+  .pickrow select{flex:1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 12px}
+  .chip{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--rule);border-radius:999px;padding:3px 6px 3px 12px;font-size:13px;background:#FCFDFC}
+  .chip.locked{padding-right:12px;border-color:#B9C6C3}
+  .chip button{border:0;background:none;cursor:pointer;color:var(--ink-soft);font:inherit;font-size:15px;line-height:1;padding:0 5px}
+  .chip button:hover{color:var(--loss)}
+  .addsrc{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .addsrc > div{min-width:170px}
+  .seg{flex-wrap:wrap}
+  details.stream{border:1px solid var(--rule);border-radius:var(--radius);padding:11px 14px;margin-bottom:9px;background:#FCFDFC}
+  details.stream[open]{background:#fff;padding-bottom:16px}
+  details.stream summary{cursor:pointer;list-style:none}
+  details.stream summary::-webkit-details-marker{display:none}
+  details.stream summary:before{content:'+';display:inline-block;width:15px;color:var(--brass);font-weight:700}
+  details.stream[open] summary:before{content:'\2013'}
+  details.stream summary:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px 16px}
+  label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:4px}
+  input,select,textarea{width:100%;font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--rule);border-radius:var(--radius);background:#FCFDFC;color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brass);outline-offset:0;border-color:var(--brass)}
+  input.num{text-align:right}
+  .calc{margin-top:16px;border-top:1px solid var(--rule);padding-top:14px;display:flex;gap:24px;align-items:baseline;flex-wrap:wrap}
+  .calc .net{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-size:26px;color:var(--gain)}
+  .actions{margin-left:auto;display:flex;gap:8px}
+  button.go{background:var(--ink);color:#fff;border:0;border-radius:var(--radius);padding:10px 18px;font:inherit;font-size:14px;cursor:pointer}
+  button.ghost{background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:var(--radius);padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
+  button.go:hover{background:#0B1920}
+  button.ghost:hover{border-color:var(--ink)}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-weight:600;font-size:12px;color:var(--ink-soft);border-bottom:1px solid var(--ink);padding:6px 8px}
+  th.num{text-align:right}
+  td{padding:7px 8px;border-bottom:1px solid var(--rule)}
+  tbody tr:hover{background:#F7F9F8}
+  tfoot td{border-top:2px solid var(--ink);border-bottom:0;font-weight:600;padding-top:9px}
+  .tag{font-size:11px;border:1px solid var(--rule);border-radius:3px;padding:1px 6px;color:var(--ink-soft)}
+  .rowbtn{border:0;background:none;color:var(--ink-soft);cursor:pointer;font:inherit;font-size:13px;padding:2px 4px}
+  .rowbtn:hover{color:var(--loss);text-decoration:underline}
+  .scroll{overflow-x:auto}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+  .filters > div{min-width:130px}
+  .empty{padding:26px 0;color:var(--ink-soft);font-size:14px}
+  pre{background:#0F1E26;color:#DCE6E4;padding:14px;border-radius:var(--radius);overflow:auto;font-size:12px;line-height:1.45}
+  ol.steps{padding-left:18px;margin:8px 0 14px}
+  ol.steps li{margin-bottom:5px;font-size:14px}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:14px;opacity:0;transition:opacity .18s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+  svg text{font-size:11px;fill:var(--ink-soft)}
+  @media (max-width:640px){
+    .hero .big{font-size:32px}
+    .spark{display:none}
+    .wrap{padding:14px 12px 70px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Income ledger</h1>
+    <span class="sub" id="periodLabel"></span>
+    <button class="pill" id="connPill"><span class="dot" id="connDot"></span><span id="connText">Not connected</span></button>
+  </header>
+
+  <section class="hero">
+    <div>
+      <div class="lbl" id="heroMonthLbl">This month, after charges</div>
+      <div class="big" id="heroNet">0.00</div>
+    </div>
+    <div class="col"><div class="lbl">Gross</div><div class="v" id="heroGross">0.00</div></div>
+    <div class="col"><div class="lbl">Charges deducted</div><div class="v loss" id="heroCharges">0.00</div></div>
+    <div class="col"><div class="lbl">Entries</div><div class="v" id="heroCount">0</div></div>
+    <div class="col"><div class="lbl">Top stream</div><div class="v" id="heroTop">&mdash;</div></div>
+    <div class="spark" id="spark"></div>
+  </section>
+
+  <nav>
+    <button data-tab="record" class="on">Record income</button>
+    <button data-tab="ledger">Ledger</button>
+    <button data-tab="trends">Trends</button>
+    <button data-tab="setup">Sheet setup</button>
+  </nav>
+
+  <!-- RECORD -->
+  <section id="tab-record">
+    <div class="panel">
+      <div class="seg" id="catSeg"></div>
+
+      <div class="grid" id="formGrid"></div>
+
+      <div class="calc">
+        <div>
+          <div class="lbl small muted">Net to you</div>
+          <div class="net" id="liveNet">0.00</div>
+        </div>
+        <div class="small muted" id="liveBreak"></div>
+        <div class="actions">
+          <button class="ghost" id="btnReset">Clear</button>
+          <button class="go" id="btnSave">Save entry</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Your income streams</h2>
+      <p class="small muted" style="margin-top:-4px">Rename these, delete them, or add your own. Each stream decides its own field labels, whether commission is deducted, and what its sources are called.</p>
+      <div id="streamList"></div>
+      <div class="addsrc" style="margin-top:6px">
+        <div style="flex:1"><label for="newStreamName">New income stream</label><input id="newStreamName" placeholder="Consultancy, room rent, farm produce, resale"></div>
+        <button class="ghost" id="btnAddStream">Add stream</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEDGER -->
+  <section id="tab-ledger" hidden>
+    <div class="panel">
+      <div class="filters">
+        <div><label for="fMonth">Month</label><select id="fMonth"></select></div>
+        <div><label for="fCat">Category</label><select id="fCat"><option>All</option></select></div>
+        <div><label for="fSrc">Source</label><select id="fSrc"><option>All</option></select></div>
+        <div style="flex:1"><label for="fText">Search source, reference or note</label><input id="fText" placeholder="e.g. tuition, T-104"></div>
+        <button class="ghost" id="btnCsv">Export CSV</button>
+      </div>
+      <div class="scroll"><table id="ledgerTbl">
+        <thead><tr>
+          <th>Date</th><th>Category</th><th>Source</th><th>Reference</th>
+          <th class="num">Gross</th><th class="num">Charges</th><th class="num">Net</th><th>Note</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table></div>
+      <div class="empty" id="ledgerEmpty" hidden>No entries yet. Record your first one on the Record income tab.</div>
+    </div>
+  </section>
+
+  <!-- TRENDS -->
+  <section id="tab-trends" hidden>
+    <div class="panel">
+      <h2>Month by month</h2>
+      <p class="small muted" style="margin-top:-4px">Solid bar is what you kept. The band above it is what charges took off the top.</p>
+      <div id="chartMonthly"></div>
+    </div>
+    <div class="panel">
+      <h2>Where it came from</h2>
+      <div class="filters"><div><label for="fYear">Period</label><select id="fYear"></select></div></div>
+      <div id="chartCat"></div>
+    </div>
+    <div class="panel">
+      <h2>Monthly figures</h2>
+      <div class="scroll"><table id="monthTbl">
+        <thead><tr><th>Month</th><th class="num">Uber net</th><th class="num">Salary net</th><th class="num">Other net</th><th class="num">Gross</th><th class="num">Charges</th><th class="num">Net</th></tr></thead>
+        <tbody></tbody><tfoot></tfoot>
+      </table></div>
+    </div>
+    <div class="panel">
+      <h2>Stream detail</h2>
+      <div class="filters"><div><label for="fStream">Stream</label><select id="fStream"></select></div></div>
+      <div class="grid" id="streamStats"></div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section id="tab-setup" hidden>
+    <div class="panel">
+      <h2>Connect your Google Sheet</h2>
+      <div class="grid">
+        <div style="grid-column:1/-1">
+          <label for="epUrl">Web app URL from Apps Script</label>
+          <input id="epUrl" placeholder="https://script.google.com/macros/s/..../exec">
+        </div>
+        <div><label for="setCur">Currency prefix</label><input id="setCur" value="Rs"></div>
+      </div>
+      <div class="calc">
+        <span class="small muted" id="syncInfo"></span>
+        <div class="actions">
+          <button class="ghost" id="btnPull">Pull from sheet</button>
+          <button class="ghost" id="btnPush">Push unsynced</button>
+          <button class="go" id="btnSaveSet">Save settings</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>One-time setup</h2>
+      <ol class="steps">
+        <li>Create a Google Sheet named anything you like.</li>
+        <li>In that sheet open Extensions, then Apps Script.</li>
+        <li>Delete whatever is there, paste the code below, save.</li>
+        <li>Click Deploy, then New deployment, choose Web app.</li>
+        <li>Set Execute as: Me. Set Who has access: Anyone. Deploy and authorise.</li>
+        <li>Copy the web app URL that ends in /exec and paste it in the field above, then save settings.</li>
+      </ol>
+      <button class="ghost" id="btnCopyCode">Copy the code</button>
+      <pre id="gsCode">const SHEET_NAME = 'Income';
+const HEADERS = ['ID','Date','Month','Category','Source','Reference','Gross','Charges','Net','Note'];
+
+function getSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) { sh = ss.insertSheet(SHEET_NAME); }
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(HEADERS);
+    sh.setFrozenRows(1);
+    sh.getRange('G:I').setNumberFormat('#,##0.00');
+  }
+  return sh;
+}
+
+function out_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return handle_(e.parameter.action || 'list', e.parameter.payload || '');
+}
+
+function doPost(e) {
+  let body = {};
+  try { body = JSON.parse(e.postData.contents); } catch (err) { body = {}; }
+  const payload = body.payload ? JSON.stringify(body.payload) : '';
+  return handle_(body.action || 'list', payload);
+}
+
+function handle_(action, payloadStr) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = getSheet_();
+    const data = payloadStr ? JSON.parse(payloadStr) : null;
+    if (action === 'add') { writeRows_(sh, [data]); }
+    if (action === 'bulk') { writeRows_(sh, data); }
+    if (action === 'update') { deleteRow_(sh, data.id); writeRows_(sh, [data]); }
+    if (action === 'delete') { deleteRow_(sh, data.id); }
+    return out_({ ok: true, rows: readRows_(sh) });
+  } catch (err) {
+    return out_({ ok: false, error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function readRows_(sh) {
+  const last = sh.getLastRow();
+  if (last < 2) { return []; }
+  const vals = sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
+  return vals.filter(function (r) { return r[0] !== ''; }).map(function (r) {
+    return {
+      id: String(r[0]), date: fmtDate_(r[1]), category: String(r[3]),
+      source: String(r[4]), ref: String(r[5]),
+      gross: Number(r[6]) || 0, charges: Number(r[7]) || 0,
+      net: Number(r[8]) || 0, note: String(r[9])
+    };
+  });
+}
+
+function fmtDate_(v) {
+  if (v instanceof Date) { return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd'); }
+  return String(v).slice(0, 10);
+}
+
+function writeRows_(sh, list) {
+  const out = list.map(function (d) {
+    return [d.id, d.date, String(d.date).slice(0, 7), d.category, d.source,
+            d.ref, Number(d.gross) || 0, Number(d.charges) || 0,
+            Number(d.net) || 0, d.note];
+  });
+  if (out.length) { sh.getRange(sh.getLastRow() + 1, 1, out.length, HEADERS.length).setValues(out); }
+}
+
+function deleteRow_(sh, id) {
+  const last = sh.getLastRow();
+  if (last < 2) { return; }
+  const ids = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (let i = ids.length - 1; i >= 0; i--) {
+    if (String(ids[i][0]) === String(id)) { sh.deleteRow(i + 2); }
+  }
+}</pre>
+      <p class="small muted">Every entry is one row. Uber commission and other deductions land in the Charges column, so the Net column is what actually reached you.</p>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- storage: Claude artifact store, else browser store, else memory ---------- */
+const mem = {};
+const store = {
+  async get(k){
+    try{ if(window.storage){ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } }catch(e){}
+    try{ if(window.localStorage){ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } }catch(e){}
+    return mem[k] !== undefined ? mem[k] : null;
+  },
+  async set(k,v){
+    mem[k] = v;
+    try{ if(window.storage){ await window.storage.set(k, JSON.stringify(v)); return; } }catch(e){}
+    try{ if(window.localStorage){ localStorage.setItem(k, JSON.stringify(v)); } }catch(e){}
+  }
+};
+
+/* ---------- helpers ---------- */
+const el = id => document.getElementById(id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n = v => { const x = parseFloat(String(v).replace(/,/g,'')); return isNaN(x) ? 0 : x; };
+const fmt = v => (Number(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today = () => new Date().toISOString().slice(0,10);
+const monthOf = d => String(d).slice(0,7);
+const monthName = m => {
+  const p = m.split('-');
+  return new Date(p[0], Number(p[1])-1, 1).toLocaleString('en-US',{month:'short'}) + ' ' + p[0];
+};
+function toast(msg){ const t = el('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2400); }
+
+/* ---------- state ---------- */
+const BLANK = () => ({
+  name:'', dateLabel:'Date received', amountLabel:'Amount received',
+  deductionLabel:'Charges or cost', commission:'', refPrefix:'', refLabel:'Reference',
+  unit:'entry', tips:false, sources:[]
+});
+const SEED = [
+  {name:'Uber', dateLabel:'Trip date', amountLabel:'Fare collected', deductionLabel:'Other deductions',
+   commission:25, refPrefix:'T', refLabel:'Trip reference', unit:'trip', tips:true, sources:['Uber']},
+  {name:'Salary', dateLabel:'Pay date', amountLabel:'Gross salary', deductionLabel:'Deductions (EPF, PAYE, loans)',
+   commission:'', refPrefix:'', refLabel:'Payslip reference', unit:'payment', tips:false, sources:[]},
+  {name:'Other', dateLabel:'Date received', amountLabel:'Amount received', deductionLabel:'Charges or cost',
+   commission:'', refPrefix:'', refLabel:'Reference', unit:'entry', tips:false, sources:[]}
+];
+
+const state = {
+  rows: [],
+  settings: { endpoint:'', currency:'Rs', streams:null },
+  cat: 'Uber',
+  editing: null
+};
+
+const money = v => state.settings.currency + ' ' + fmt(v);
+const streams = () => state.settings.streams;
+const streamOf = name => streams().filter(s => s.name === name)[0] || Object.assign(BLANK(), {name:name});
+const hasComm = s => s.commission !== '' && s.commission !== null && s.commission !== undefined;
+
+/* ---------- google sheet transport ---------- */
+async function callSheet(action, payload){
+  const url = state.settings.endpoint;
+  if(!url) throw new Error('No web app URL saved');
+  try{
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action, payload}),
+      redirect:'follow'
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || 'Sheet returned an error');
+    return j;
+  }catch(e){
+    const q = url + '?action=' + encodeURIComponent(action) +
+              (payload ? '&payload=' + encodeURIComponent(JSON.stringify(payload)) : '');
+    const r2 = await fetch(q);
+    const j2 = await r2.json();
+    if(!j2.ok) throw new Error(j2.error || 'Sheet returned an error');
+    return j2;
+  }
+}
+const strip = r => ({id:r.id, date:r.date, category:r.category, source:r.source, ref:r.ref, gross:r.gross, charges:r.charges, net:r.net, note:r.note});
+
+async function pull(){
+  const j = await callSheet('list', null);
+  state.rows = j.rows.map(r => Object.assign({}, r, {synced:true, inSheet:true}));
+  adoptStreams();
+  await persist();
+  renderAll();
+  toast('Pulled ' + state.rows.length + ' rows from the sheet');
+}
+
+async function pushUnsynced(){
+  const pending = state.rows.filter(r => !r.synced);
+  if(!pending.length){ toast('Everything is already in the sheet'); return; }
+  const fresh = pending.filter(r => !r.inSheet);
+  const changed = pending.filter(r => r.inSheet);
+  for(let i=0; i<fresh.length; i+=25){ await callSheet('bulk', fresh.slice(i, i+25).map(strip)); }
+  for(let i=0; i<changed.length; i++){ await callSheet('update', strip(changed[i])); }
+  state.rows.forEach(r => { r.synced = true; r.inSheet = true; });
+  await persist();
+  renderAll();
+  toast('Synced ' + pending.length + ' entries');
+}
+
+/* ---------- persistence ---------- */
+async function persist(){
+  await store.set('income_rows', state.rows);
+  await store.set('income_settings', state.settings);
+}
+
+function adoptStreams(){
+  state.rows.forEach(r => {
+    if(r.category && !streams().some(s => s.name === r.category)){
+      streams().push(Object.assign(BLANK(), {name:r.category}));
+    }
+  });
+}
+
+async function boot(){
+  const rows = await store.get('income_rows');
+  const set = await store.get('income_settings');
+  if(Array.isArray(rows)) state.rows = rows;
+  if(set) state.settings = Object.assign(state.settings, set);
+  if(!Array.isArray(state.settings.streams) || !state.settings.streams.length){
+    const old = state.settings.sources || {};
+    state.settings.streams = SEED.map(s => Object.assign({}, s, {sources: (old[s.name] || s.sources).slice()}));
+  }
+  streams().forEach(s => { if(!Array.isArray(s.sources)) s.sources = []; });
+  adoptStreams();
+  state.cat = streams()[0] ? streams()[0].name : 'Other';
+  el('epUrl').value = state.settings.endpoint;
+  el('setCur').value = state.settings.currency;
+  renderTabs();
+  buildForm();
+  renderAll();
+  if(state.settings.endpoint){ try{ await pull(); }catch(e){ toast('Sheet not reachable: ' + e.message); } }
+}
+
+/* ---------- entry form ---------- */
+function fieldsFor(s){
+  const f = [
+    {k:'date', l:s.dateLabel || 'Date', t:'date'},
+    {k:'source', l:'Income source', t:'src'},
+    {k:'ref', l:s.refLabel || 'Reference', t:'text', ph: s.refPrefix ? 'auto' : ''},
+    {k:'gross', l:s.amountLabel || 'Amount', t:'num'}
+  ];
+  if(s.tips) f.push({k:'tips', l:'Tips and bonus', t:'num'});
+  if(hasComm(s)){
+    f.push({k:'commPct', l:'Commission %', t:'num'});
+    f.push({k:'commAmt', l:'Commission amount', t:'num'});
+  }
+  f.push({k:'other', l:s.deductionLabel || 'Deductions', t:'num'});
+  f.push({k:'note', l:'Note', t:'text'});
+  return f;
+}
+
+function renderTabs(){
+  el('catSeg').innerHTML = streams().map(s =>
+    '<button data-cat="' + esc(s.name) + '"' + (s.name === state.cat ? ' class="on"' : '') + '>' + esc(s.name) + '</button>').join('');
+  el('catSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
+    state.cat = b.dataset.cat; state.editing = null; el('btnSave').textContent = 'Save entry';
+    el('catSeg').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    buildForm(true);
+  });
+}
+
+function buildForm(keepDate){
+  const s = streamOf(state.cat);
+  const prevDate = keepDate && el('f_date') ? el('f_date').value : today();
+  const g = el('formGrid');
+  g.innerHTML = '';
+  fieldsFor(s).forEach(f => {
+    const d = document.createElement('div');
+    if(f.k === 'note') d.style.gridColumn = '1/-1';
+    let inp;
+    if(f.t === 'date') inp = '<input type="date" id="f_date">';
+    else if(f.t === 'src') inp = srcPicker();
+    else inp = '<input id="f_' + f.k + '" class="' + (f.t==='num'?'num':'') + '" inputmode="' + (f.t==='num'?'decimal':'text') + '" placeholder="' + esc(f.ph||'') + '">';
+    d.innerHTML = '<label for="f_' + f.k + '">' + esc(f.l) + '</label>' + inp;
+    g.appendChild(d);
+  });
+  el('f_date').value = prevDate;
+  if(hasComm(s)) el('f_commPct').value = s.commission;
+  if(s.refPrefix) el('f_ref').placeholder = nextRef(s);
+  const sSel = el('f_source');
+  if(sSel) sSel.onchange = () => {
+    const nw = el('f_sourceNew');
+    nw.hidden = sSel.value !== '__new';
+    if(!nw.hidden) nw.focus();
+    live();
+  };
+  g.querySelectorAll('input').forEach(i => i.addEventListener('input', onInput));
+  live();
+}
+
+function srcPicker(){
+  return '<div class="pickrow"><select id="f_source">' +
+    sourcesFor(state.cat).map(x => '<option>' + esc(x) + '</option>').join('') +
+    '<option value="__new">Add a new source</option></select>' +
+    '<input id="f_sourceNew" hidden placeholder="Name it" style="flex:1"></div>';
+}
+
+function sourcesFor(cat){
+  const set = new Set(streamOf(cat).sources || []);
+  state.rows.forEach(r => { if(r.category === cat && r.source) set.add(r.source); });
+  if(!set.size) set.add(cat);
+  return Array.from(set).sort();
+}
+
+function addSource(cat, name){
+  if(!name) return;
+  const s = streams().filter(x => x.name === cat)[0];
+  if(!s) return;
+  if(s.sources.indexOf(name) === -1) s.sources.push(name);
+}
+
+function nextRef(s){
+  const re = new RegExp('^' + s.refPrefix + '-(\\d+)$');
+  const nums = state.rows.filter(r => r.category === s.name && re.test(r.ref||'')).map(r => Number(re.exec(r.ref)[1]));
+  return s.refPrefix + '-' + String((nums.length ? Math.max.apply(null, nums) : 0) + 1).padStart(3,'0');
+}
+
+function onInput(e){
+  const s = streamOf(state.cat);
+  if(hasComm(s) && el('f_commPct')){
+    const gross = n(el('f_gross').value) + (s.tips ? n(el('f_tips').value) : 0);
+    if(e && e.target && e.target.id === 'f_commAmt'){
+      el('f_commPct').value = gross ? ((n(e.target.value)/gross)*100).toFixed(2) : '';
+    } else {
+      el('f_commAmt').value = gross ? (gross * n(el('f_commPct').value)/100).toFixed(2) : '';
+    }
+  }
+  live();
+}
+
+function readForm(){
+  const s = streamOf(state.cat);
+  const v = k => { const x = el('f_' + k); return x ? x.value : ''; };
+  let gross = n(v('gross'));
+  if(s.tips) gross += n(v('tips'));
+  let source = v('source');
+  if(source === '__new') source = el('f_sourceNew') ? el('f_sourceNew').value.trim() : '';
+  let ref = v('ref');
+  if(!ref && s.refPrefix) ref = nextRef(s);
+  const charges = (hasComm(s) ? n(v('commAmt')) : 0) + n(v('other'));
+  return {
+    id: state.editing || ('R' + Date.now().toString(36) + Math.floor(Math.random()*900+100)),
+    date: v('date') || today(),
+    category: s.name,
+    source: source || s.name,
+    ref: ref,
+    gross: +gross.toFixed(2),
+    charges: +charges.toFixed(2),
+    net: +(gross - charges).toFixed(2),
+    note: v('note'),
+    synced: false,
+    inSheet: false
+  };
+}
+
+function live(){
+  const r = readForm();
+  el('liveNet').textContent = money(r.net);
+  el('liveBreak').textContent = r.charges
+    ? money(r.gross) + ' gross less ' + money(r.charges) + ' charges  (' + (r.gross ? (r.charges/r.gross*100).toFixed(1) : '0') + '% taken)'
+    : (r.gross ? 'No charges on this entry' : '');
+}
+
+async function saveEntry(){
+  const r = readForm();
+  if(!r.gross){ toast('Enter an amount first'); return; }
+  if(el('f_source') && el('f_source').value === '__new' && !r.source){ toast('Name the new source first'); return; }
+  addSource(r.category, r.source);
+  const editing = state.editing;
+  if(editing){
+    const old = state.rows.filter(x => x.id === r.id)[0];
+    r.inSheet = old ? !!old.inSheet : false;
+    state.rows = state.rows.map(x => x.id === r.id ? r : x);
+    state.editing = null;
+    el('btnSave').textContent = 'Save entry';
+  } else {
+    state.rows.push(r);
+  }
+  await persist();
+  buildForm(true);
+  if(el('f_source')) el('f_source').value = r.source;
+  renderAll();
+  toast('Saved ' + money(r.net) + ' net to ' + r.source);
+  if(state.settings.endpoint){
+    try{
+      await callSheet(editing ? 'update' : 'add', strip(r));
+      const t = state.rows.filter(x => x.id === r.id)[0];
+      if(t){ t.synced = true; t.inSheet = true; }
+      await persist(); renderConn();
+    }catch(e){ toast('Saved here, sheet is offline'); renderConn(); }
+  }
+}
+
+function editRow(id){
+  const r = state.rows.filter(x => x.id === id)[0];
+  if(!r) return;
+  state.cat = r.category;
+  renderTabs();
+  buildForm();
+  state.editing = id;
+  const s = streamOf(r.category);
+  el('f_date').value = r.date;
+  el('f_ref').value = r.ref;
+  el('f_note').value = r.note;
+  el('f_gross').value = r.gross;
+  if(el('f_source')) el('f_source').value = r.source;
+  if(el('f_tips')) el('f_tips').value = '';
+  if(hasComm(s)){
+    el('f_commAmt').value = r.charges;
+    el('f_commPct').value = r.gross ? (r.charges/r.gross*100).toFixed(2) : '';
+    el('f_other').value = '';
+  } else {
+    el('f_other').value = r.charges;
+  }
+  el('btnSave').textContent = 'Update entry';
+  showTab('record');
+  live();
+}
+
+async function deleteRow(id){
+  if(!confirm('Delete this entry?')) return;
+  const r = state.rows.filter(x => x.id === id)[0];
+  state.rows = state.rows.filter(x => x.id !== id);
+  await persist();
+  renderAll();
+  if(state.settings.endpoint && r && r.inSheet){
+    try{ await callSheet('delete', {id}); }catch(e){ toast('Deleted here, sheet is offline'); }
+  }
+}
+
+/* ---------- stream manager ---------- */
+function fld(i, k, label, val, cls){
+  return '<div><label for="st_' + i + '_' + k + '">' + label + '</label>' +
+    '<input id="st_' + i + '_' + k + '" class="' + (cls||'') + '" value="' + esc(val==null?'':val) + '"></div>';
+}
+
+function renderStreams(){
+  const box = el('streamList');
+  box.innerHTML = streams().map((s,i) => {
+    const rows = state.rows.filter(r => r.category === s.name);
+    const net = rows.reduce((a,r) => a + r.net, 0);
+    const bits = [rows.length + ' entries', money(net) + ' net'];
+    if(hasComm(s)) bits.push(s.commission + '% commission');
+    return '<details class="stream"><summary><b>' + esc(s.name) + '</b> <span class="muted small">' + bits.join(', ') + '</span></summary>' +
+      '<div class="grid" style="margin:14px 0">' +
+        fld(i,'name','Stream name',s.name) +
+        fld(i,'dateLabel','Date field label',s.dateLabel) +
+        fld(i,'amountLabel','Amount field label',s.amountLabel) +
+        fld(i,'deductionLabel','Deduction field label',s.deductionLabel) +
+        fld(i,'commission','Commission %, blank for none',s.commission,'num') +
+        fld(i,'refPrefix','Auto reference prefix, blank for free text',s.refPrefix) +
+        fld(i,'refLabel','Reference field label',s.refLabel) +
+        fld(i,'unit','Word for one entry',s.unit) +
+        '<div><label for="st_' + i + '_tips">Tips or bonus field</label><select id="st_' + i + '_tips">' +
+        '<option value="no">Not needed</option><option value="yes">Show it</option></select></div>' +
+      '</div>' +
+      '<div class="lbl">Sources inside this stream</div><div class="chips">' +
+      sourcesFor(s.name).map(x => {
+        const used = state.rows.filter(r => r.category === s.name && r.source === x).length;
+        return used
+          ? '<span class="chip locked">' + esc(x) + ' <span class="muted small">' + used + '</span></span>'
+          : '<span class="chip">' + esc(x) + '<button data-rmsrc="' + esc(x) + '" data-i="' + i + '" aria-label="Remove">&times;</button></span>';
+      }).join('') + '</div>' +
+      '<div class="addsrc">' +
+        '<div style="flex:1"><input id="st_' + i + '_newsrc" placeholder="Add a source under ' + esc(s.name) + '"></div>' +
+        '<button class="ghost" data-addsrc="' + i + '">Add source</button>' +
+        '<button class="ghost" data-delstream="' + i + '">Delete stream</button>' +
+        '<button class="go" data-savestream="' + i + '">Save stream</button>' +
+      '</div></details>';
+  }).join('');
+
+  streams().forEach((s,i) => { const t = el('st_' + i + '_tips'); if(t) t.value = s.tips ? 'yes' : 'no'; });
+  box.querySelectorAll('[data-savestream]').forEach(b => b.onclick = () => saveStream(Number(b.dataset.savestream)));
+  box.querySelectorAll('[data-delstream]').forEach(b => b.onclick = () => deleteStream(Number(b.dataset.delstream)));
+  box.querySelectorAll('[data-addsrc]').forEach(b => b.onclick = async () => {
+    const i = Number(b.dataset.addsrc), nm = el('st_' + i + '_newsrc').value.trim();
+    if(!nm){ toast('Type a source name first'); return; }
+    addSource(streams()[i].name, nm);
+    await persist(); buildForm(true); renderStreams();
+    toast('Added ' + nm);
+  });
+  box.querySelectorAll('[data-rmsrc]').forEach(b => b.onclick = async () => {
+    const i = Number(b.dataset.i);
+    streams()[i].sources = streams()[i].sources.filter(x => x !== b.dataset.rmsrc);
+    await persist(); buildForm(true); renderStreams();
+  });
+}
+
+async function saveStream(i){
+  const s = streams()[i];
+  const get = k => { const x = el('st_' + i + '_' + k); return x ? x.value.trim() : ''; };
+  const newName = get('name') || s.name;
+  const clash = streams().some((x,j) => j !== i && x.name === newName);
+  if(clash){ toast('Another stream already uses that name'); return; }
+  const oldName = s.name;
+  s.name = newName;
+  s.dateLabel = get('dateLabel') || 'Date';
+  s.amountLabel = get('amountLabel') || 'Amount';
+  s.deductionLabel = get('deductionLabel') || 'Deductions';
+  s.commission = get('commission') === '' ? '' : n(get('commission'));
+  s.refPrefix = get('refPrefix');
+  s.refLabel = get('refLabel') || 'Reference';
+  s.unit = get('unit') || 'entry';
+  s.tips = el('st_' + i + '_tips').value === 'yes';
+
+  let moved = 0;
+  if(oldName !== newName){
+    state.rows.forEach(r => {
+      if(r.category === oldName){ r.category = newName; r.synced = false; moved++; }
+      if(r.source === oldName) r.source = newName;
+    });
+    s.sources = s.sources.map(x => x === oldName ? newName : x);
+    if(state.cat === oldName) state.cat = newName;
+  }
+  await persist();
+  renderTabs(); buildForm(true); renderAll();
+  toast(moved ? 'Renamed, ' + moved + ' entries moved across' : 'Stream saved');
+  if(moved && state.settings.endpoint){ try{ await pushUnsynced(); }catch(e){ toast('Renamed here, push when the sheet is reachable'); } }
+}
+
+async function deleteStream(i){
+  const s = streams()[i];
+  const count = state.rows.filter(r => r.category === s.name).length;
+  if(count){ toast('Cannot delete, ' + count + ' entries use it. Rename it instead.'); return; }
+  if(streams().length === 1){ toast('Keep at least one stream'); return; }
+  if(!confirm('Delete the ' + s.name + ' stream?')) return;
+  streams().splice(i,1);
+  if(state.cat === s.name) state.cat = streams()[0].name;
+  await persist();
+  renderTabs(); buildForm(); renderAll();
+}
+
+async function addStream(){
+  const nm = el('newStreamName').value.trim();
+  if(!nm){ toast('Name the stream first'); return; }
+  if(streams().some(s => s.name === nm)){ toast('That stream already exists'); return; }
+  streams().push(Object.assign(BLANK(), {name:nm}));
+  el('newStreamName').value = '';
+  state.cat = nm;
+  await persist();
+  renderTabs(); buildForm(); renderAll();
+  toast('Added ' + nm + '. Open it below to set its fields.');
+}
+
+/* ---------- aggregation ---------- */
+function months(){
+  const s = new Set(state.rows.map(r => monthOf(r.date)));
+  s.add(monthOf(today()));
+  return Array.from(s).sort();
+}
+function agg(rows){
+  return rows.reduce((a,r) => {
+    a.gross += r.gross; a.charges += r.charges; a.net += r.net; a.count++;
+    a.by[r.category] = (a.by[r.category]||0) + r.net;
+    return a;
+  }, {gross:0, charges:0, net:0, count:0, by:{}});
+}
+const byMonth = m => state.rows.filter(r => monthOf(r.date) === m);
+
+/* ---------- rendering ---------- */
+function renderAll(){ renderHero(); renderLedger(); renderTrends(); renderStreams(); renderConn(); }
+
+function renderConn(){
+  const on = !!state.settings.endpoint;
+  const pending = state.rows.filter(r => !r.synced).length;
+  el('connDot').className = 'dot' + (on && !pending ? ' on' : '');
+  el('connText').textContent = !on ? 'Sheet not connected' : (pending ? pending + ' waiting to sync' : 'Sheet connected');
+  el('syncInfo').textContent = state.rows.length + ' entries stored, ' + pending + ' not yet in the sheet.';
+}
+
+function renderHero(){
+  const m = monthOf(today());
+  const rows = byMonth(m);
+  const a = agg(rows);
+  el('heroMonthLbl').textContent = monthName(m) + ', after charges';
+  el('heroNet').textContent = money(a.net);
+  el('heroGross').textContent = money(a.gross);
+  el('heroCharges').textContent = money(a.charges);
+  el('heroCount').textContent = a.count;
+  const top = Object.keys(a.by).sort((x,y) => a.by[y]-a.by[x])[0];
+  el('heroTop').textContent = top ? top : '—';
+  el('periodLabel').textContent = state.rows.length ? state.rows.length + ' entries on record' : 'Start by recording an entry';
+
+  const ms = months().slice(-6);
+  const vals = ms.map(x => agg(byMonth(x)).net);
+  const max = Math.max.apply(null, vals.concat([1]));
+  el('spark').innerHTML = ms.map((x,i) =>
+    '<div style="height:' + Math.max(2, vals[i]/max*56) + 'px" title="' + monthName(x) + ': ' + money(vals[i]) + '"></div>').join('');
+}
+
+function allCategories(){
+  const set = new Set(streams().map(s => s.name));
+  state.rows.forEach(r => set.add(r.category));
+  return Array.from(set);
+}
+
+function renderLedger(){
+  const sel = el('fMonth'), curM = sel.value || 'All';
+  sel.innerHTML = '<option>All</option>' + months().slice().reverse().map(m => '<option value="' + m + '">' + monthName(m) + '</option>').join('');
+  sel.value = curM;
+
+  const csel = el('fCat'), curC = csel.value || 'All';
+  const cats = allCategories();
+  csel.innerHTML = '<option>All</option>' + cats.map(c => '<option>' + esc(c) + '</option>').join('');
+  csel.value = cats.indexOf(curC) === -1 ? 'All' : curC;
+
+  const ssel = el('fSrc'), curS = ssel.value || 'All';
+  const allSrc = Array.from(new Set(state.rows.map(r => r.source).filter(Boolean))).sort();
+  ssel.innerHTML = '<option>All</option>' + allSrc.map(x => '<option>' + esc(x) + '</option>').join('');
+  ssel.value = allSrc.indexOf(curS) === -1 ? 'All' : curS;
+
+  const q = el('fText').value.toLowerCase();
+  const rows = state.rows.filter(r =>
+      (sel.value === 'All' || monthOf(r.date) === sel.value) &&
+      (csel.value === 'All' || r.category === csel.value) &&
+      (ssel.value === 'All' || r.source === ssel.value) &&
+      (!q || (r.source + ' ' + r.ref + ' ' + r.note).toLowerCase().indexOf(q) !== -1)
+    ).sort((a,b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+
+  const tb = el('ledgerTbl').querySelector('tbody');
+  tb.innerHTML = rows.map(r =>
+    '<tr><td>' + r.date + '</td>' +
+    '<td><span class="tag">' + esc(r.category) + '</span></td>' +
+    '<td>' + esc(r.source) + '</td><td class="muted small">' + esc(r.ref) + '</td>' +
+    '<td class="num">' + fmt(r.gross) + '</td>' +
+    '<td class="num loss">' + (r.charges ? '-' + fmt(r.charges) : '') + '</td>' +
+    '<td class="num gain">' + fmt(r.net) + '</td>' +
+    '<td class="muted small">' + esc(r.note) + (r.synced ? '' : ' <span class="tag">local</span>') + '</td>' +
+    '<td class="num"><button class="rowbtn" data-edit="' + r.id + '">edit</button>' +
+    '<button class="rowbtn" data-del="' + r.id + '">delete</button></td></tr>').join('');
+
+  const a = agg(rows);
+  el('ledgerTbl').querySelector('tfoot').innerHTML = rows.length ?
+    '<tr><td colspan="4">' + rows.length + ' entries</td><td class="num">' + fmt(a.gross) + '</td>' +
+    '<td class="num loss">-' + fmt(a.charges) + '</td><td class="num gain">' + fmt(a.net) + '</td><td colspan="2"></td></tr>' : '';
+  el('ledgerEmpty').hidden = rows.length > 0;
+
+  tb.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => editRow(b.dataset.edit));
+  tb.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteRow(b.dataset.del));
+}
+
+function renderTrends(){
+  const ms = months().slice(-12);
+  const data = ms.map(m => { const a = agg(byMonth(m)); a.m = m; return a; });
+  el('chartMonthly').innerHTML = monthlyChart(data);
+
+  const ysel = el('fYear');
+  const years = Array.from(new Set(state.rows.map(r => r.date.slice(0,4)))).sort().reverse();
+  const cury = ysel.value || (years[0] || String(new Date().getFullYear()));
+  ysel.innerHTML = '<option>All time</option>' + years.map(y => '<option>' + y + '</option>').join('');
+  ysel.value = cury;
+  const sub = state.rows.filter(r => ysel.value === 'All time' || r.date.slice(0,4) === ysel.value);
+  el('chartCat').innerHTML = catChart(sub);
+
+  const cats = allCategories();
+  el('monthTbl').querySelector('thead').innerHTML = '<tr><th>Month</th>' +
+    cats.map(c => '<th class="num">' + esc(c) + '</th>').join('') +
+    '<th class="num">Gross</th><th class="num">Charges</th><th class="num">Net</th></tr>';
+  el('monthTbl').querySelector('tbody').innerHTML = data.slice().reverse().map(d =>
+    '<tr><td>' + monthName(d.m) + '</td>' +
+    cats.map(c => '<td class="num">' + fmt(d.by[c]||0) + '</td>').join('') +
+    '<td class="num">' + fmt(d.gross) + '</td><td class="num loss">' + fmt(d.charges) + '</td>' +
+    '<td class="num gain">' + fmt(d.net) + '</td></tr>').join('');
+  const tot = agg(state.rows);
+  const active = data.filter(d => d.count).length || 1;
+  el('monthTbl').querySelector('tfoot').innerHTML =
+    '<tr><td>Average per active month</td>' +
+    cats.map(c => '<td class="num">' + fmt((tot.by[c]||0)/active) + '</td>').join('') +
+    '<td class="num">' + fmt(tot.gross/active) + '</td><td class="num loss">' + fmt(tot.charges/active) +
+    '</td><td class="num gain">' + fmt(tot.net/active) + '</td></tr>';
+
+  const dsel = el('fStream'), curD = dsel.value || cats[0];
+  dsel.innerHTML = cats.map(c => '<option>' + esc(c) + '</option>').join('');
+  dsel.value = cats.indexOf(curD) === -1 ? cats[0] : curD;
+  const s = streamOf(dsel.value);
+  const rows = state.rows.filter(r => r.category === dsel.value);
+  const a = agg(rows);
+  const unit = s.unit || 'entry';
+  el('streamStats').innerHTML = [
+    [(unit.charAt(0).toUpperCase() + unit.slice(1)) + 's recorded', a.count],
+    ['Gross received', money(a.gross)],
+    ['Charges deducted', money(a.charges)],
+    ['Kept after charges', money(a.net)],
+    ['Average net per ' + unit, money(a.count ? a.net/a.count : 0)],
+    ['Effective charge rate', (a.gross ? (a.charges/a.gross*100).toFixed(1) : '0') + '%']
+  ].map(p => '<div><div class="lbl">' + p[0] + '</div><div style="font-size:18px">' + p[1] + '</div></div>').join('');
+}
+
+function monthlyChart(data){
+  if(!data.length) return '<div class="empty">Nothing to chart yet.</div>';
+  const W = 820, H = 260, L = 58, R = 12, T = 16, B = 34;
+  const max = Math.max.apply(null, data.map(d => d.gross).concat([1]));
+  const step = (W - L - R) / data.length;
+  const bw = Math.min(46, step * 0.6);
+  const y = v => T + (H - T - B) * (1 - v/max);
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img">';
+  for(let i=0;i<=4;i++){
+    const v = max*i/4, yy = y(v);
+    s += '<line x1="' + L + '" x2="' + (W-R) + '" y1="' + yy + '" y2="' + yy + '" stroke="#CBD4D2" stroke-width="1"/>' +
+         '<text x="' + (L-8) + '" y="' + (yy+4) + '" text-anchor="end">' + Math.round(v).toLocaleString('en-US') + '</text>';
+  }
+  data.forEach((d,i) => {
+    const x = L + step*i + (step-bw)/2;
+    const yn = y(d.net), yg = y(d.gross);
+    s += '<rect x="' + x + '" y="' + yg + '" width="' + bw + '" height="' + Math.max(0,yn-yg) + '" fill="#9B3B42" opacity="0.35"/>';
+    s += '<rect x="' + x + '" y="' + yn + '" width="' + bw + '" height="' + Math.max(0,(H-B)-yn) + '" fill="#1D6F5C"/>';
+    s += '<title>' + monthName(d.m) + ': net ' + fmt(d.net) + ', charges ' + fmt(d.charges) + '</title>';
+    s += '<text x="' + (x+bw/2) + '" y="' + (H-B+16) + '" text-anchor="middle">' + monthName(d.m).replace(' ','\u00a0') + '</text>';
+  });
+  s += '<line x1="' + L + '" x2="' + (W-R) + '" y1="' + (H-B) + '" y2="' + (H-B) + '" stroke="#12242E" stroke-width="1.5"/></svg>';
+  return s;
+}
+
+function catChart(rows){
+  const groups = {};
+  rows.forEach(r => {
+    const key = (r.source && r.source !== r.category) ? r.category + ' · ' + r.source : (r.source || r.category);
+    groups[key] = (groups[key]||0) + r.net;
+  });
+  const list = Object.keys(groups).map(k => [k, groups[k]]).sort((a,b) => b[1]-a[1]).slice(0,12);
+  if(!list.length) return '<div class="empty">Nothing in this period.</div>';
+  const max = Math.max.apply(null, list.map(x => x[1]).concat([1]));
+  const total = list.reduce((s,x) => s+x[1], 0);
+  return '<table><tbody>' + list.map(x =>
+    '<tr><td style="width:190px">' + esc(x[0]) + '</td>' +
+    '<td><div style="background:#1D6F5C;height:12px;border-radius:2px;width:' + Math.max(1, x[1]/max*100) + '%"></div></td>' +
+    '<td class="num" style="width:130px">' + fmt(x[1]) + '</td>' +
+    '<td class="num muted small" style="width:60px">' + (total ? (x[1]/total*100).toFixed(0) : 0) + '%</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+/* ---------- csv ---------- */
+function csv(){
+  const head = ['ID','Date','Month','Category','Source','Reference','Gross','Charges','Net','Note'];
+  const lines = [head.join(',')].concat(state.rows.map(r =>
+    [r.id, r.date, monthOf(r.date), r.category, r.source, r.ref, r.gross, r.charges, r.net, r.note]
+      .map(v => '"' + String(v==null?'':v).replace(/"/g,'""') + '"').join(',')));
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'income-ledger.csv';
+  a.click();
+}
+
+/* ---------- tabs and wiring ---------- */
+function showTab(t){
+  ['record','ledger','trends','setup'].forEach(x => el('tab-' + x).hidden = (x !== t));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+el('btnSave').onclick = saveEntry;
+el('btnReset').onclick = () => { state.editing = null; el('btnSave').textContent = 'Save entry'; buildForm(); };
+el('btnAddStream').onclick = addStream;
+el('fMonth').onchange = renderLedger;
+el('fCat').onchange = renderLedger;
+el('fSrc').onchange = renderLedger;
+el('fText').oninput = renderLedger;
+el('fYear').onchange = renderTrends;
+el('fStream').onchange = renderTrends;
+el('btnCsv').onclick = csv;
+el('connPill').onclick = () => showTab('setup');
+el('btnSaveSet').onclick = async () => {
+  state.settings.endpoint = el('epUrl').value.trim();
+  state.settings.currency = el('setCur').value.trim() || 'Rs';
+  await persist(); renderAll();
+  if(state.settings.endpoint){ try{ await pull(); }catch(e){ toast('Saved, but the sheet did not answer: ' + e.message); } }
+  else toast('Settings saved');
+};
+el('btnPull').onclick = () => pull().catch(e => toast(e.message));
+el('btnPush').onclick = () => pushUnsynced().catch(e => toast(e.message));
+el('btnCopyCode').onclick = () => {
+  navigator.clipboard.writeText(el('gsCode').textContent).then(() => toast('Code copied'), () => toast('Select the code and copy it manually'));
+};
+
+boot();
+</script>
